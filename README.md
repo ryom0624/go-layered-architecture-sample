@@ -119,6 +119,7 @@ curl http://localhost:8080/api/v1/users
 - **Database**: PostgreSQL, MySQL対応
 - **Configuration**: godotenv
 - **Containerization**: Docker
+- **Testing**: 標準testingパッケージ, go-sqlmock, httptest
 
 ## 拡張方法
 
@@ -138,6 +139,42 @@ curl http://localhost:8080/api/v1/users
 ### バリデーションの追加
 
 ハンドラーでGinのバインディング機能を使用してリクエストバリデーションを行えます。
+
+## テスト
+
+このプロジェクトは包括的なテストスイートを含んでいます：
+
+### テスト実行方法
+
+```bash
+# 全テスト実行
+go test ./...
+
+# 詳細出力付きテスト実行
+go test -v ./...
+
+# カバレッジ付きテスト実行
+go test -cover ./...
+
+# Dockerコンテナ内でのテスト実行
+docker compose exec app go test ./... -v
+```
+
+### テストアーキテクチャ
+
+- **ユースケース層テスト**: ビジネスロジックの単体テスト（カスタムモック使用）
+- **ハンドラー層テスト**: HTTP エンドポイントのテスト（httptest使用）
+- **リポジトリ層テスト**: データベース操作のテスト（go-sqlmock使用）
+- **設定パッケージテスト**: 環境変数読み込みのテスト
+
+### テストファイル
+
+- `internal/usecase/user_usecase_test.go` - ビジネスロジックテスト
+- `internal/presentation/handler/user_handler_test.go` - HTTPハンドラーテスト
+- `internal/infrastructure/repository/user_repository_impl_test.go` - リポジトリテスト
+- `pkg/config/config_test.go` - 設定管理テスト
+
+詳細なテスト計画については `TEST_PLAN.md` を参照してください。
 
 ## ライセンス
 

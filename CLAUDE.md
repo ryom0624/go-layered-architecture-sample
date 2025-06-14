@@ -13,6 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `go test ./...` - Run all tests
 - `go test ./internal/usecase/...` - Run tests for a specific package
 - `go test -v ./...` - Run tests with verbose output
+- `go test -cover ./...` - Run tests with coverage
+- `docker compose exec app go test ./... -v` - Run tests in Docker container
 
 ### Environment Setup
 - `cp .env.example .env` - Copy environment configuration template
@@ -54,3 +56,21 @@ When adding new entities, follow this sequence:
 - GORM handles migrations automatically on startup
 - Repository pattern abstracts database operations
 - Context is passed through all database operations for timeout/cancellation support
+
+### Testing Architecture
+The codebase includes comprehensive tests for all layers:
+- **Unit Tests**: Use case layer with custom mocks (no external dependencies)
+- **Integration Tests**: Repository layer with go-sqlmock for database operations
+- **HTTP Tests**: Handler layer with httptest and Gin test mode
+- **Config Tests**: Environment variable loading and validation
+- Test files follow the pattern `*_test.go` alongside source files
+- Custom mock implementations instead of external mocking libraries
+- Standard Go testing package without assertion libraries
+
+### API Endpoints
+RESTful API with the following endpoints:
+- `POST /api/v1/users` - Create user (requires name, email)
+- `GET /api/v1/users` - Get all users
+- `GET /api/v1/users/:id` - Get user by ID
+- `PUT /api/v1/users/:id` - Update user (partial updates supported)
+- `DELETE /api/v1/users/:id` - Delete user
