@@ -1,6 +1,7 @@
 # Go Layered Architecture Template
 
 Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語のレイヤードアーキテクチャテンプレートです。
+ユーザー管理機能と記事投稿機能を実装し、データベーストランザクション対応の包括的なWebアプリケーションを提供します。
 
 ## プロジェクト構造
 
@@ -10,17 +11,20 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 │   └── main.go
 ├── internal/                   # プライベートなアプリケーションコード
 │   ├── domain/                 # ドメイン層
-│   │   ├── entity/            # エンティティ
-│   │   └── repository/        # リポジトリインターフェース
+│   │   ├── entity/            # エンティティ（User, Article）
+│   │   └── repository/        # リポジトリインターフェース（トランザクション対応）
 │   ├── usecase/               # アプリケーション層（ユースケース）
 │   ├── infrastructure/        # インフラストラクチャ層
-│   │   ├── database/         # データベース接続
+│   │   ├── database/         # データベース接続・トランザクション管理
 │   │   └── repository/       # リポジトリ実装
 │   └── presentation/          # プレゼンテーション層
 │       ├── handler/          # HTTPハンドラー
 │       └── router/           # ルーター
 ├── pkg/                       # 外部から利用可能な公開コード
 │   └── config/               # 設定管理
+├── tasks/                     # タスクドキュメント
+│   ├── 01_user.md            # User機能実装ドキュメント
+│   └── 02_article.md         # Article機能実装ドキュメント
 ├── .env.example              # 環境変数のサンプル
 ├── docker-compose.yml        # Docker Compose設定
 ├── Dockerfile               # Docker設定
@@ -30,19 +34,38 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 ## アーキテクチャの特徴
 
 ### 1. ドメイン層 (Domain Layer)
-- **Entity**: ビジネスエンティティとルール
-- **Repository Interface**: データアクセスの抽象化
+- **Entity**: ビジネスエンティティとルール（User, Article）
+- **Repository Interface**: データアクセスの抽象化（トランザクション対応）
 
 ### 2. アプリケーション層 (Application Layer)
 - **Usecase**: ビジネスロジックとアプリケーションルール
+- **Transaction Management**: データ整合性保証
 
 ### 3. インフラストラクチャ層 (Infrastructure Layer)
-- **Database**: データベース接続管理
+- **Database**: データベース接続管理・トランザクション制御
 - **Repository Implementation**: データアクセスの具体実装
 
 ### 4. プレゼンテーション層 (Presentation Layer)
 - **Handler**: HTTPリクエストの処理
 - **Router**: ルーティング設定
+
+## 主要機能
+
+### ✅ ユーザー管理システム
+- ユーザーのCRUD操作
+- 重複メール検証
+- 入力値バリデーション
+
+### ✅ 記事投稿システム
+- 記事のCRUD操作
+- 記事公開/非公開機能
+- 著者情報との関連付け
+- データベーストランザクション対応
+
+### ✅ トランザクション機能
+- 複数テーブル操作の整合性保証
+- エラー時の自動ロールバック
+- データ整合性の確保
 
 ## セットアップ
 
@@ -80,11 +103,26 @@ docker compose up
 
 ### ユーザー管理
 
-- `POST /api/v1/users` - ユーザー作成
-- `GET /api/v1/users` - 全ユーザー取得
-- `GET /api/v1/users/:id` - ユーザー取得
-- `PUT /api/v1/users/:id` - ユーザー更新
-- `DELETE /api/v1/users/:id` - ユーザー削除
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/users` | ユーザー作成 |
+| GET | `/api/v1/users` | 全ユーザー取得 |
+| GET | `/api/v1/users/:id` | ユーザー取得 |
+| PUT | `/api/v1/users/:id` | ユーザー更新 |
+| DELETE | `/api/v1/users/:id` | ユーザー削除 |
+
+### 記事管理
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/articles` | 記事作成 |
+| GET | `/api/v1/articles` | 全記事取得 |
+| GET | `/api/v1/articles/published` | 公開記事のみ取得 |
+| GET | `/api/v1/articles/:id` | 記事詳細取得 |
+| PUT | `/api/v1/articles/:id` | 記事更新 |
+| DELETE | `/api/v1/articles/:id` | 記事削除 |
+| PUT | `/api/v1/articles/:id/publish` | 記事公開 |
+| PUT | `/api/v1/articles/:id/unpublish` | 記事非公開 |
 
 ### リクエスト例
 
@@ -98,6 +136,23 @@ curl -X POST http://localhost:8080/api/v1/users \
 #### ユーザー一覧取得
 ```bash
 curl http://localhost:8080/api/v1/users
+```
+
+#### 記事作成
+```bash
+curl -X POST http://localhost:8080/api/v1/articles \
+  -H "Content-Type: application/json" \
+  -d '{"title": "My First Article", "content": "Article content here...", "author_id": 1}'
+```
+
+#### 記事公開
+```bash
+curl -X PUT http://localhost:8080/api/v1/articles/1/publish
+```
+
+#### 公開記事一覧取得
+```bash
+curl http://localhost:8080/api/v1/articles/published
 ```
 
 ## 環境変数
@@ -169,9 +224,17 @@ docker compose exec app go test ./... -v
 
 ### テストファイル
 
-- `internal/usecase/user_usecase_test.go` - ビジネスロジックテスト
-- `internal/presentation/handler/user_handler_test.go` - HTTPハンドラーテスト
-- `internal/infrastructure/repository/user_repository_impl_test.go` - リポジトリテスト
+#### ユーザー機能
+- `internal/usecase/user_usecase_test.go` - ユーザービジネスロジックテスト
+- `internal/presentation/handler/user_handler_test.go` - ユーザーHTTPハンドラーテスト
+- `internal/infrastructure/repository/user_repository_impl_test.go` - ユーザーリポジトリテスト
+
+#### 記事機能
+- `internal/usecase/article_usecase_test.go` - 記事ビジネスロジックテスト（トランザクション含む）
+- `internal/presentation/handler/article_handler_test.go` - 記事HTTPハンドラーテスト
+- `internal/infrastructure/repository/article_repository_impl_test.go` - 記事リポジトリテスト
+
+#### 共通機能
 - `pkg/config/config_test.go` - 設定管理テスト
 
 詳細なテスト計画については `TEST_PLAN.md` を参照してください。

@@ -1,4 +1,8 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24 AS builder
+
+# airとdelveのインストール
+RUN go install github.com/air-verse/air@latest && \
+    go install github.com/go-delve/delve/cmd/dlv@latest
 
 WORKDIR /app
 
@@ -11,13 +15,5 @@ RUN go test ./... -v
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/main.go
 
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-
-COPY --from=builder /app/main .
-
-EXPOSE 8080
-
-CMD ["./main"]
+# airの実行
+CMD ["air", "-c", ".air.toml"]

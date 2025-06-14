@@ -109,8 +109,8 @@ func TestUserRepositoryImpl_GetByID(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "email", "created_at", "updated_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, expectedUser.Email, expectedUser.CreatedAt, expectedUser.UpdatedAt)
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT 1`)).
-			WithArgs(1).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)).
+			WithArgs(1, 1).
 			WillReturnRows(rows)
 
 		user, err := repo.GetByID(ctx, 1)
@@ -119,6 +119,7 @@ func TestUserRepositoryImpl_GetByID(t *testing.T) {
 		}
 		if user == nil {
 			t.Error("expected user, got nil")
+			return
 		}
 		if user.ID != expectedUser.ID {
 			t.Errorf("expected ID %d, got %d", expectedUser.ID, user.ID)
@@ -133,8 +134,8 @@ func TestUserRepositoryImpl_GetByID(t *testing.T) {
 	})
 
 	t.Run("user not found", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT 1`)).
-			WithArgs(99).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)).
+			WithArgs(99, 1).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		user, err := repo.GetByID(ctx, 99)
@@ -170,8 +171,8 @@ func TestUserRepositoryImpl_GetByEmail(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "email", "created_at", "updated_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, expectedUser.Email, expectedUser.CreatedAt, expectedUser.UpdatedAt)
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE email = $1 ORDER BY "users"."id" LIMIT 1`)).
-			WithArgs("john@example.com").
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE email = $1 ORDER BY "users"."id" LIMIT $2`)).
+			WithArgs("john@example.com", 1).
 			WillReturnRows(rows)
 
 		user, err := repo.GetByEmail(ctx, "john@example.com")
@@ -180,6 +181,7 @@ func TestUserRepositoryImpl_GetByEmail(t *testing.T) {
 		}
 		if user == nil {
 			t.Error("expected user, got nil")
+			return
 		}
 		if user.Email != expectedUser.Email {
 			t.Errorf("expected email %s, got %s", expectedUser.Email, user.Email)
@@ -191,8 +193,8 @@ func TestUserRepositoryImpl_GetByEmail(t *testing.T) {
 	})
 
 	t.Run("email not found", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE email = $1 ORDER BY "users"."id" LIMIT 1`)).
-			WithArgs("notfound@example.com").
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE email = $1 ORDER BY "users"."id" LIMIT $2`)).
+			WithArgs("notfound@example.com", 1).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		user, err := repo.GetByEmail(ctx, "notfound@example.com")
@@ -279,8 +281,8 @@ func TestUserRepositoryImpl_Update(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"updated_at"=$3 WHERE "id" = $4`)).
-			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"created_at"=$3,"updated_at"=$4 WHERE "id" = $5`)).
+			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -302,8 +304,8 @@ func TestUserRepositoryImpl_Update(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"updated_at"=$3 WHERE "id" = $4`)).
-			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"created_at"=$3,"updated_at"=$4 WHERE "id" = $5`)).
+			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnError(sql.ErrConnDone)
 		mock.ExpectRollback()
 

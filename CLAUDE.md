@@ -21,6 +21,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docker compose up -d postgres` - Start PostgreSQL database only
 - `docker compose up` - Start full application stack with database
 
+### Database Seeding
+- `go run cmd/seed/main.go` - Seed database with sample data locally
+- `./scripts/seed.sh` - Run seed script locally
+- `./scripts/docker-seed.sh` - Run seed script in Docker container
+- `docker compose run --rm app go run cmd/seed/main.go` - Direct Docker seeding
+
 ## Architecture Overview
 
 This is a Clean Architecture implementation with strict dependency rules:
@@ -69,8 +75,27 @@ The codebase includes comprehensive tests for all layers:
 
 ### API Endpoints
 RESTful API with the following endpoints:
+
+#### User Management
 - `POST /api/v1/users` - Create user (requires name, email)
 - `GET /api/v1/users` - Get all users
 - `GET /api/v1/users/:id` - Get user by ID
 - `PUT /api/v1/users/:id` - Update user (partial updates supported)
 - `DELETE /api/v1/users/:id` - Delete user
+
+#### Article Management
+- `POST /api/v1/articles` - Create article (requires title, content, author_id)
+- `GET /api/v1/articles` - Get all articles
+- `GET /api/v1/articles/published` - Get published articles only
+- `GET /api/v1/articles/:id` - Get article by ID
+- `PUT /api/v1/articles/:id` - Update article (partial updates supported)
+- `DELETE /api/v1/articles/:id` - Delete article
+- `PUT /api/v1/articles/:id/publish` - Publish article (uses transaction)
+- `PUT /api/v1/articles/:id/unpublish` - Unpublish article (uses transaction)
+
+### Database Seeding Data
+The seed command creates sample data:
+- **10 Users**: John Doe, Jane Smith, Alice Johnson, etc.
+- **15 Articles**: Technical articles on various programming topics
+- **Mixed Status**: Some articles published, some in draft status
+- **Author Relations**: Articles are randomly assigned to different users

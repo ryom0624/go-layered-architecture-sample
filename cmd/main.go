@@ -23,13 +23,18 @@ func main() {
 	}
 	defer db.Close()
 
+	transactionManager := database.NewGormTransactionManager(db.DB)
+	
 	userRepo := repository.NewUserRepository(db.DB)
+	articleRepo := repository.NewArticleRepository(db.DB)
 
 	userUsecase := usecase.NewUserUsecase(userRepo)
+	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
 
 	userHandler := handler.NewUserHandler(userUsecase)
+	articleHandler := handler.NewArticleHandler(articleUsecase)
 
-	r := router.SetupRouter(userHandler)
+	r := router.SetupRouter(userHandler, articleHandler)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {
