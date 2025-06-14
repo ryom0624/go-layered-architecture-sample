@@ -1,0 +1,56 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Common Commands
+
+### Development
+- `go mod tidy` - Download and clean up dependencies
+- `go run cmd/main.go` - Start the application locally
+- `go build -o bin/app cmd/main.go` - Build the application binary
+
+### Testing
+- `go test ./...` - Run all tests
+- `go test ./internal/usecase/...` - Run tests for a specific package
+- `go test -v ./...` - Run tests with verbose output
+
+### Environment Setup
+- `cp .env.example .env` - Copy environment configuration template
+- `docker compose up -d postgres` - Start PostgreSQL database only
+- `docker compose up` - Start full application stack with database
+
+## Architecture Overview
+
+This is a Clean Architecture implementation with strict dependency rules:
+
+### Dependency Flow (Inner → Outer)
+1. **Domain Layer** (`internal/domain/`) - Core business entities and repository interfaces
+2. **Application Layer** (`internal/usecase/`) - Business logic and use cases
+3. **Infrastructure Layer** (`internal/infrastructure/`) - Database connections and repository implementations
+4. **Presentation Layer** (`internal/presentation/`) - HTTP handlers and routing
+
+### Key Architectural Rules
+- Dependencies flow inward only (outer layers depend on inner layers, never vice versa)
+- Domain layer has no external dependencies
+- Repository interfaces are defined in domain, implemented in infrastructure
+- Dependency injection occurs in `cmd/main.go` where all layers are wired together
+
+### Configuration Management
+- Environment variables loaded via `pkg/config/config.go`
+- Database connection supports both PostgreSQL and MySQL via `DB_DRIVER` env var
+- Auto-migration handled by GORM in `internal/infrastructure/database/connection.go`
+
+### Adding New Features
+When adding new entities, follow this sequence:
+1. Entity in `internal/domain/entity/`
+2. Repository interface in `internal/domain/repository/`  
+3. Repository implementation in `internal/infrastructure/repository/`
+4. Use case in `internal/usecase/`
+5. Handler in `internal/presentation/handler/`
+6. Route registration in `internal/presentation/router/`
+7. Wire dependencies in `cmd/main.go`
+
+### Database Operations
+- GORM handles migrations automatically on startup
+- Repository pattern abstracts database operations
+- Context is passed through all database operations for timeout/cancellation support
