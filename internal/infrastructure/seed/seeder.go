@@ -5,17 +5,20 @@ import (
 	"log"
 
 	"layered-architecture-template/internal/domain/repository"
+	"gorm.io/gorm"
 )
 
 type Seeder struct {
 	userSeeder    *UserSeeder
 	articleSeeder *ArticleSeeder
+	db            *gorm.DB
 }
 
-func NewSeeder(userRepo repository.UserRepository, articleRepo repository.ArticleRepository) *Seeder {
+func NewSeeder(userRepo repository.UserRepository, articleRepo repository.ArticleRepository, db *gorm.DB) *Seeder {
 	return &Seeder{
 		userSeeder:    NewUserSeeder(userRepo),
 		articleSeeder: NewArticleSeeder(articleRepo, userRepo),
+		db:            db,
 	}
 }
 
@@ -33,6 +36,13 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 	log.Println("Seeding articles...")
 	if err := s.articleSeeder.SeedArticles(ctx); err != nil {
 		log.Printf("Failed to seed articles: %v", err)
+		return err
+	}
+
+	// Seed comments (comments depend on users and articles)
+	log.Println("Seeding comments...")
+	if err := SeedComments(s.db); err != nil {
+		log.Printf("Failed to seed comments: %v", err)
 		return err
 	}
 

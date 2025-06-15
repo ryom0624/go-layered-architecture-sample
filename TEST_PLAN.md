@@ -2,7 +2,7 @@
 
 ## 概要
 Clean Architecture パターンに基づくGoアプリケーションの包括的なテスト戦略とその実装状況。
-ユーザー管理機能と記事投稿機能（トランザクション対応）の完全なテストスイートを提供。
+ユーザー管理機能、記事投稿機能、コメントシステム（すべてトランザクション対応）の完全なテストスイートを提供。
 
 ## 実装済みテスト
 
@@ -195,6 +195,125 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM, カスタムTransaction Mock
 
+## コメント機能テスト
+
+### ✅ ユースケース層テスト - Comment
+**ファイル**: `internal/usecase/comment_usecase_test.go`
+
+**テスト対象**: コメントビジネスロジック層の検証（階層構造・承認機能・トランザクション対応）
+- `TestCommentUsecase_CreateComment`
+  - 正常なコメント作成
+  - 空のコンテンツバリデーション
+  - AuthorID=0バリデーション
+  - ArticleID=0バリデーション
+  - 存在しない著者バリデーション
+  - 存在しない記事バリデーション
+- `TestCommentUsecase_CreateReply`
+  - 正常な返信コメント作成
+  - 階層制限（最大3レベル）の検証
+  - 存在しない親コメントバリデーション
+  - 異なる記事への返信エラー
+- `TestCommentUsecase_GetComment`
+  - 存在するコメントの取得
+  - 存在しないコメントの取得
+- `TestCommentUsecase_UpdateComment`
+  - 正常なコメント更新（同一著者）
+  - 他人のコメント更新エラー
+  - 存在しないコメントの更新
+- `TestCommentUsecase_DeleteComment`
+  - 正常なコメント削除（同一著者）
+  - 他人のコメント削除エラー
+  - 存在しないコメントの削除
+- `TestCommentUsecase_GetArticleComments`
+  - 記事の全コメント取得（階層構造含む）
+  - 空のコメントリスト取得
+- `TestCommentUsecase_GetUserComments`
+  - ユーザーの全コメント取得
+  - 空のコメントリスト取得
+- `TestCommentUsecase_ApproveComment`
+  - 正常なコメント承認（トランザクション使用）
+  - すでに承認済みコメント処理
+  - 存在しないコメント承認
+- `TestCommentUsecase_RejectComment`
+  - 正常なコメント拒否（トランザクション使用）
+  - すでに拒否済みコメント処理
+- `TestCommentUsecase_GetPendingComments`
+  - 承認待ちコメント取得
+  - ステータスフィルタリング検証
+
+**モック実装**: `MockCommentRepository`, `MockUserRepository`, `MockArticleRepository`, `MockTransactionManager`
+
+### ✅ ハンドラー層テスト - Comment
+**ファイル**: `internal/presentation/handler/comment_handler_test.go`
+
+**テスト対象**: コメントHTTP エンドポイントの検証
+- `TestCommentHandler_CreateCommentOnArticle`
+  - 正常なコメント作成 (201 Created)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 必須フィールド不足 (400 Bad Request)
+- `TestCommentHandler_CreateReply`
+  - 正常な返信コメント作成 (201 Created)
+  - 階層制限エラー (400 Bad Request)
+- `TestCommentHandler_GetComment`
+  - 存在するコメントの取得 (200 OK)
+  - 存在しないコメント (404 Not Found)
+  - 無効なコメントID (400 Bad Request)
+- `TestCommentHandler_GetArticleComments`
+  - 記事のコメント取得 (200 OK)
+  - 階層構造の検証
+- `TestCommentHandler_GetUserComments`
+  - ユーザーのコメント取得 (200 OK)
+- `TestCommentHandler_UpdateComment`
+  - 正常なコメント更新 (200 OK)
+  - 権限エラー (403 Forbidden)
+- `TestCommentHandler_DeleteComment`
+  - 正常なコメント削除 (204 No Content)
+  - 権限エラー (403 Forbidden)
+- `TestCommentHandler_ApproveComment`
+  - 正常なコメント承認 (200 OK)
+  - 存在しないコメント (500 Internal Server Error)
+- `TestCommentHandler_RejectComment`
+  - 正常なコメント拒否 (200 OK)
+- `TestCommentHandler_GetPendingComments`
+  - 承認待ちコメント取得 (200 OK)
+
+**モック実装**: `MockCommentUsecase` - カスタム実装
+**テストルーター**: Gin テストモードでのHTTPテスト
+
+### ✅ リポジトリ層テスト - Comment
+**ファイル**: `internal/infrastructure/repository/comment_repository_impl_test.go`
+
+**テスト対象**: コメントデータベース操作層の検証（階層構造対応）
+- `TestCommentRepositoryImpl_Create`
+  - 正常なコメント作成
+  - データベースエラー時の作成失敗
+- `TestCommentRepositoryImpl_GetByID`
+  - 正常なID検索（Author・Article・Replies Preload含む）
+  - 存在しないコメントの検索
+- `TestCommentRepositoryImpl_GetByArticleID`
+  - 記事別コメント取得（階層構造含む）
+  - 空のコメントリスト取得
+- `TestCommentRepositoryImpl_GetByUserID`
+  - ユーザー別コメント取得
+  - 空のコメントリスト取得
+- `TestCommentRepositoryImpl_GetByStatus`
+  - ステータス別コメント取得
+  - 承認・拒否・承認待ちフィルタリング
+- `TestCommentRepositoryImpl_Update`
+  - 正常なコメント更新
+  - データベースエラー時の更新失敗
+- `TestCommentRepositoryImpl_Delete`
+  - 正常なコメント削除
+  - データベースエラー時の削除失敗
+- `TestCommentRepositoryImpl_CreateWithTx`
+  - トランザクション内でのコメント作成
+- `TestCommentRepositoryImpl_UpdateWithTx`
+  - トランザクション内でのコメント更新
+- `TestCommentRepositoryImpl_DeleteWithTx`
+  - トランザクション内でのコメント削除
+
+**使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM, カスタムTransaction Mock
+
 ## 共通機能テスト
 
 ### ✅ 設定パッケージテスト
@@ -232,7 +351,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 ## テスト統計
 
-### 実装済みテストファイル数: 7ファイル
+### 実装済みテストファイル数: 10ファイル
 #### ユーザー機能: 3ファイル
 - UseCase テスト
 - Handler テスト  
@@ -243,10 +362,15 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 - Handler テスト
 - Repository テスト（トランザクション含む）
 
+#### コメント機能: 3ファイル
+- UseCase テスト（階層構造・承認機能・トランザクション含む）
+- Handler テスト
+- Repository テスト（階層構造・トランザクション含む）
+
 #### 共通機能: 1ファイル
 - Config テスト
 
-### テストケース総数: 約80+テストケース
+### テストケース総数: 約130+テストケース
 - 正常系テスト
 - 異常系テスト
 - バリデーションテスト
@@ -313,8 +437,13 @@ go test ./internal/presentation/handler -v
 5. `internal/presentation/handler/article_handler_test.go` - 記事HTTPハンドラーテスト
 6. `internal/infrastructure/repository/article_repository_impl_test.go` - 記事リポジトリテスト（トランザクション含む）
 
+### コメント機能テスト
+7. `internal/usecase/comment_usecase_test.go` - コメントビジネスロジックテスト（階層構造・承認機能・トランザクション含む）
+8. `internal/presentation/handler/comment_handler_test.go` - コメントHTTPハンドラーテスト
+9. `internal/infrastructure/repository/comment_repository_impl_test.go` - コメントリポジトリテスト（階層構造・トランザクション含む）
+
 ### 共通機能テスト
-7. `pkg/config/config_test.go` - 設定管理テスト
+10. `pkg/config/config_test.go` - 設定管理テスト
 
 ## 今後の拡張予定
 

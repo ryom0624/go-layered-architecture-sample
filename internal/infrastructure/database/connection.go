@@ -30,7 +30,7 @@ func NewDatabase(cfg *config.Config) (*Database, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&entity.User{}, &entity.Article{}); err != nil {
+	if err := db.AutoMigrate(&entity.User{}, &entity.Article{}, &entity.Comment{}); err != nil {
 		return nil, err
 	}
 

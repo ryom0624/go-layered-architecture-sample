@@ -24,7 +24,8 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 │   └── config/               # 設定管理
 ├── tasks/                     # タスクドキュメント
 │   ├── 01_user.md            # User機能実装ドキュメント
-│   └── 02_article.md         # Article機能実装ドキュメント
+│   ├── 02_article.md         # Article機能実装ドキュメント
+│   └── 03_comment.md         # Comment機能実装ドキュメント
 ├── .env.example              # 環境変数のサンプル
 ├── docker-compose.yml        # Docker Compose設定
 ├── Dockerfile               # Docker設定
@@ -34,7 +35,7 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 ## アーキテクチャの特徴
 
 ### 1. ドメイン層 (Domain Layer)
-- **Entity**: ビジネスエンティティとルール（User, Article）
+- **Entity**: ビジネスエンティティとルール（User, Article, Comment）
 - **Repository Interface**: データアクセスの抽象化（トランザクション対応）
 
 ### 2. アプリケーション層 (Application Layer)
@@ -60,6 +61,12 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 - 記事のCRUD操作
 - 記事公開/非公開機能
 - 著者情報との関連付け
+- データベーストランザクション対応
+
+### ✅ コメントシステム
+- 階層コメント機能（最大3レベルの返信）
+- コメント承認・モデレーション機能
+- ユーザー・記事との関連付け
 - データベーストランザクション対応
 
 ### ✅ トランザクション機能
@@ -123,6 +130,21 @@ docker compose up
 | DELETE | `/api/v1/articles/:id` | 記事削除 |
 | PUT | `/api/v1/articles/:id/publish` | 記事公開 |
 | PUT | `/api/v1/articles/:id/unpublish` | 記事非公開 |
+| POST | `/api/v1/articles/:id/comments` | 記事へのコメント作成 |
+| GET | `/api/v1/articles/:id/comments` | 記事のコメント取得 |
+
+### コメント管理
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/users/:id/comments` | ユーザーのコメント取得 |
+| GET | `/api/v1/comments/:id` | コメント詳細取得 |
+| PUT | `/api/v1/comments/:id` | コメント更新 |
+| DELETE | `/api/v1/comments/:id` | コメント削除 |
+| POST | `/api/v1/comments/:id/replies` | 返信コメント作成 |
+| GET | `/api/v1/comments/pending` | 承認待ちコメント取得 |
+| PUT | `/api/v1/comments/:id/approve` | コメント承認 |
+| PUT | `/api/v1/comments/:id/reject` | コメント拒否 |
 
 ### リクエスト例
 
@@ -153,6 +175,30 @@ curl -X PUT http://localhost:8080/api/v1/articles/1/publish
 #### 公開記事一覧取得
 ```bash
 curl http://localhost:8080/api/v1/articles/published
+```
+
+#### コメント作成
+```bash
+curl -X POST http://localhost:8080/api/v1/articles/1/comments \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Great article!", "author_id": 1}'
+```
+
+#### 返信コメント作成
+```bash
+curl -X POST http://localhost:8080/api/v1/comments/1/replies \
+  -H "Content-Type: application/json" \
+  -d '{"content": "I agree!", "author_id": 2}'
+```
+
+#### 記事のコメント取得
+```bash
+curl http://localhost:8080/api/v1/articles/1/comments
+```
+
+#### コメント承認
+```bash
+curl -X PUT http://localhost:8080/api/v1/comments/1/approve
 ```
 
 ## 環境変数
@@ -233,6 +279,11 @@ docker compose exec app go test ./... -v
 - `internal/usecase/article_usecase_test.go` - 記事ビジネスロジックテスト（トランザクション含む）
 - `internal/presentation/handler/article_handler_test.go` - 記事HTTPハンドラーテスト
 - `internal/infrastructure/repository/article_repository_impl_test.go` - 記事リポジトリテスト
+
+#### コメント機能
+- `internal/usecase/comment_usecase_test.go` - コメントビジネスロジックテスト（階層構造・承認機能含む）
+- `internal/presentation/handler/comment_handler_test.go` - コメントHTTPハンドラーテスト
+- `internal/infrastructure/repository/comment_repository_impl_test.go` - コメントリポジトリテスト
 
 #### 共通機能
 - `pkg/config/config_test.go` - 設定管理テスト

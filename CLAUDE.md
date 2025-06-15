@@ -92,10 +92,23 @@ RESTful API with the following endpoints:
 - `DELETE /api/v1/articles/:id` - Delete article
 - `PUT /api/v1/articles/:id/publish` - Publish article (uses transaction)
 - `PUT /api/v1/articles/:id/unpublish` - Unpublish article (uses transaction)
+- `POST /api/v1/articles/:id/comments` - Create comment on article
+- `GET /api/v1/articles/:id/comments` - Get all comments for article
+
+#### Comment Management
+- `GET /api/v1/users/:id/comments` - Get all comments by user
+- `GET /api/v1/comments/:id` - Get comment by ID
+- `PUT /api/v1/comments/:id` - Update comment (requires same author)
+- `DELETE /api/v1/comments/:id` - Delete comment (requires same author)
+- `POST /api/v1/comments/:id/replies` - Create reply to comment (hierarchical, max 3 levels)
+- `GET /api/v1/comments/pending` - Get all pending comments (moderation)
+- `PUT /api/v1/comments/:id/approve` - Approve comment (moderation)
+- `PUT /api/v1/comments/:id/reject` - Reject comment (moderation)
 
 ### Database Seeding Data
 The seed command creates sample data:
 - **10 Users**: John Doe, Jane Smith, Alice Johnson, etc.
 - **15 Articles**: Technical articles on various programming topics
-- **Mixed Status**: Some articles published, some in draft status
-- **Author Relations**: Articles are randomly assigned to different users
+- **25+ Comments**: Sample comments with hierarchical structure and different statuses
+- **Mixed Status**: Some articles published, some in draft status; comments with pending/approved/rejected status
+- **Relations**: Articles assigned to users, comments linked to articles and users with parent-child relationships

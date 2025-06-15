@@ -31,7 +31,7 @@ func main() {
 	articleRepo := repository.NewArticleRepository(db.DB)
 
 	// Initialize seeder
-	seeder := seed.NewSeeder(userRepo, articleRepo)
+	seeder := seed.NewSeeder(userRepo, articleRepo, db.DB)
 
 	// Run seeding
 	ctx := context.Background()

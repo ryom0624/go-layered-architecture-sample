@@ -27,14 +27,17 @@ func main() {
 	
 	userRepo := repository.NewUserRepository(db.DB)
 	articleRepo := repository.NewArticleRepository(db.DB)
+	commentRepo := repository.NewCommentRepository(db.DB)
 
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
+	commentUsecase := usecase.NewCommentUsecase(commentRepo, userRepo, articleRepo, transactionManager)
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	articleHandler := handler.NewArticleHandler(articleUsecase)
+	commentHandler := handler.NewCommentHandler(commentUsecase)
 
-	r := router.SetupRouter(userHandler, articleHandler)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {
