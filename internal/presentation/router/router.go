@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler) *gin.Engine {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
@@ -26,6 +26,8 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			articles.POST("", articleHandler.CreateArticle)
 			articles.GET("", articleHandler.GetAllArticles)
 			articles.GET("/published", articleHandler.GetPublishedArticles)
+			articles.GET("/popular", searchHandler.GetPopularArticles)
+			articles.GET("/recent", searchHandler.GetRecentArticles)
 			articles.GET("/:id", articleHandler.GetArticle)
 			articles.PUT("/:id", articleHandler.UpdateArticle)
 			articles.DELETE("/:id", articleHandler.DeleteArticle)
@@ -47,6 +49,9 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			comments.PUT("/:id/approve", commentHandler.ApproveComment)
 			comments.PUT("/:id/reject", commentHandler.RejectComment)
 		}
+
+		// Search routes
+		api.GET("/search", searchHandler.SearchArticles)
 	}
 
 	return r

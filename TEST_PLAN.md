@@ -314,6 +314,59 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM, カスタムTransaction Mock
 
+## 検索・フィルタリング機能テスト
+
+### ✅ ユースケース層テスト - Search
+**ファイル**: `internal/usecase/search_usecase_test.go`
+
+**テスト対象**: 検索・フィルタリングビジネスロジック層の検証
+- `TestSearchUsecase_SearchArticles`
+  - クエリありの記事検索
+  - ページネーション機能
+  - ステータスフィルタリング
+  - 無効なソート順での検証
+  - 長すぎるクエリでの検証
+- `TestSearchUsecase_GetPopularArticles`
+  - 人気記事取得（公開記事のみ）
+  - 制限数の適用（デフォルト10、最大50）
+  - ゼロ制限でのデフォルト処理
+  - 制限数上限での処理
+- `TestSearchUsecase_GetRecentArticles`
+  - 最新記事取得（公開記事のみ）
+  - 制限数の適用
+  - デフォルト値処理
+- `TestSearchUsecase_ValidateSearchParams`
+  - null パラメータでのエラー
+  - 有効なパラメータでの検証
+  - 長すぎるクエリでの検証
+  - 無効なソート順での検証
+  - 無効な日付範囲での検証
+
+**モック実装**: `MockArticleRepository` - 検索メソッド対応
+
+### ✅ ハンドラー層テスト - Search
+**ファイル**: `internal/presentation/handler/search_handler_test.go`
+
+**テスト対象**: 検索HTTP エンドポイントの検証
+- `TestSearchHandler_SearchArticles`
+  - パラメータなしでの検索 (200 OK)
+  - クエリパラメータありでの検索 (200 OK)
+  - ページネーション付き検索 (200 OK)
+  - フィルタ付き検索（クエリ・ステータス・著者ID） (200 OK)
+  - 日付範囲フィルタ付き検索 (200 OK)
+  - ソート付き検索 (200 OK)
+- `TestSearchHandler_GetPopularArticles`
+  - 制限なしでの人気記事取得 (200 OK)
+  - 制限ありでの人気記事取得 (200 OK)
+  - 無効な制限値での処理 (200 OK)
+- `TestSearchHandler_GetRecentArticles`
+  - 制限なしでの最新記事取得 (200 OK)
+  - 制限ありでの最新記事取得 (200 OK)
+  - 無効な制限値での処理 (200 OK)
+
+**モック実装**: `MockSearchUsecase` - カスタム実装
+**テストルーター**: Gin テストモードでのHTTPテスト
+
 ## 共通機能テスト
 
 ### ✅ 設定パッケージテスト
@@ -351,7 +404,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 ## テスト統計
 
-### 実装済みテストファイル数: 10ファイル
+### 実装済みテストファイル数: 12ファイル
 #### ユーザー機能: 3ファイル
 - UseCase テスト
 - Handler テスト  
@@ -367,10 +420,14 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 - Handler テスト
 - Repository テスト（階層構造・トランザクション含む）
 
+#### 検索・フィルタリング機能: 2ファイル
+- UseCase テスト（検索・ページネーション・バリデーション含む）
+- Handler テスト（HTTP エンドポイント検証）
+
 #### 共通機能: 1ファイル
 - Config テスト
 
-### テストケース総数: 約130+テストケース
+### テストケース総数: 約150+テストケース
 - 正常系テスト
 - 異常系テスト
 - バリデーションテスト
@@ -442,8 +499,12 @@ go test ./internal/presentation/handler -v
 8. `internal/presentation/handler/comment_handler_test.go` - コメントHTTPハンドラーテスト
 9. `internal/infrastructure/repository/comment_repository_impl_test.go` - コメントリポジトリテスト（階層構造・トランザクション含む）
 
+### 検索・フィルタリング機能テスト
+10. `internal/usecase/search_usecase_test.go` - 検索ビジネスロジックテスト（検索・ページネーション・バリデーション含む）
+11. `internal/presentation/handler/search_handler_test.go` - 検索HTTPハンドラーテスト
+
 ### 共通機能テスト
-10. `pkg/config/config_test.go` - 設定管理テスト
+12. `pkg/config/config_test.go` - 設定管理テスト
 
 ## 今後の拡張予定
 

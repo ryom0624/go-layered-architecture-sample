@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
@@ -219,6 +220,52 @@ func (m *mockArticleRepository) Delete(ctx context.Context, id uint) error {
 
 func (m *mockArticleRepository) DeleteWithTx(ctx context.Context, tx repository.Transaction, id uint) error {
 	return nil
+}
+
+// Search methods for search functionality
+func (m *mockArticleRepository) Search(ctx context.Context, params *entity.ArticleSearchParams) (*entity.ArticleSearchResult, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	
+	return &entity.ArticleSearchResult{
+		Articles:   articles,
+		Total:      int64(len(articles)),
+		Page:       params.Page,
+		Limit:      params.Limit,
+		TotalPages: 1,
+	}, nil
+}
+
+func (m *mockArticleRepository) SearchWithFilters(ctx context.Context, query string, filters map[string]interface{}) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *mockArticleRepository) GetByDateRange(ctx context.Context, from, to time.Time) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *mockArticleRepository) GetPopular(ctx context.Context, limit int) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		if article.Status == "published" {
+			articles = append(articles, article)
+		}
+	}
+	return articles, nil
+}
+
+func (m *mockArticleRepository) CountByFilters(ctx context.Context, filters map[string]interface{}) (int64, error) {
+	return int64(len(m.articles)), nil
 }
 
 type mockTransactionManager struct{}

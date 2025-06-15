@@ -69,6 +69,13 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 - ユーザー・記事との関連付け
 - データベーストランザクション対応
 
+### ✅ 検索・フィルタリング機能
+- 記事の全文検索（タイトル・本文）
+- 高度なフィルタリング（著者・ステータス・日付範囲）
+- ソート機能（作成日・更新日・タイトル・著者・関連度）
+- ページネーション対応
+- 人気記事・最新記事取得
+
 ### ✅ トランザクション機能
 - 複数テーブル操作の整合性保証
 - エラー時の自動ロールバック
@@ -123,8 +130,10 @@ docker compose up
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/v1/articles` | 記事作成 |
-| GET | `/api/v1/articles` | 全記事取得 |
+| GET | `/api/v1/articles` | 全記事取得（フィルタリング対応） |
 | GET | `/api/v1/articles/published` | 公開記事のみ取得 |
+| GET | `/api/v1/articles/popular` | 人気記事取得 |
+| GET | `/api/v1/articles/recent` | 最新記事取得 |
 | GET | `/api/v1/articles/:id` | 記事詳細取得 |
 | PUT | `/api/v1/articles/:id` | 記事更新 |
 | DELETE | `/api/v1/articles/:id` | 記事削除 |
@@ -132,6 +141,12 @@ docker compose up
 | PUT | `/api/v1/articles/:id/unpublish` | 記事非公開 |
 | POST | `/api/v1/articles/:id/comments` | 記事へのコメント作成 |
 | GET | `/api/v1/articles/:id/comments` | 記事のコメント取得 |
+
+### 検索・フィルタリング
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/search` | 記事の包括的検索・フィルタリング |
 
 ### コメント管理
 
@@ -199,6 +214,34 @@ curl http://localhost:8080/api/v1/articles/1/comments
 #### コメント承認
 ```bash
 curl -X PUT http://localhost:8080/api/v1/comments/1/approve
+```
+
+#### 記事検索
+```bash
+# 全文検索
+curl "http://localhost:8080/api/v1/search?query=Go言語"
+
+# フィルタリング付き検索
+curl "http://localhost:8080/api/v1/search?query=programming&author_id=1&status=published"
+
+# ページネーション付き検索
+curl "http://localhost:8080/api/v1/search?query=tutorial&page=1&limit=5"
+
+# ソート付き検索
+curl "http://localhost:8080/api/v1/search?sort_by=created_at&sort_order=desc"
+
+# 日付範囲フィルタ
+curl "http://localhost:8080/api/v1/search?date_from=2023-01-01&date_to=2023-12-31"
+```
+
+#### 人気記事取得
+```bash
+curl "http://localhost:8080/api/v1/articles/popular?limit=10"
+```
+
+#### 最新記事取得
+```bash
+curl "http://localhost:8080/api/v1/articles/recent?limit=5"
 ```
 
 ## 環境変数
@@ -284,6 +327,10 @@ docker compose exec app go test ./... -v
 - `internal/usecase/comment_usecase_test.go` - コメントビジネスロジックテスト（階層構造・承認機能含む）
 - `internal/presentation/handler/comment_handler_test.go` - コメントHTTPハンドラーテスト
 - `internal/infrastructure/repository/comment_repository_impl_test.go` - コメントリポジトリテスト
+
+#### 検索・フィルタリング機能
+- `internal/usecase/search_usecase_test.go` - 検索ビジネスロジックテスト（検索・ページネーション・バリデーション含む）
+- `internal/presentation/handler/search_handler_test.go` - 検索HTTPハンドラーテスト
 
 #### 共通機能
 - `pkg/config/config_test.go` - 設定管理テスト

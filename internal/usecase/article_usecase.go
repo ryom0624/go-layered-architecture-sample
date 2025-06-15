@@ -11,6 +11,7 @@ type ArticleUsecase interface {
 	CreateArticle(ctx context.Context, title, content string, authorID uint) (*entity.Article, error)
 	GetArticle(ctx context.Context, id uint) (*entity.Article, error)
 	GetAllArticles(ctx context.Context) ([]*entity.Article, error)
+	GetAllArticlesWithFilters(ctx context.Context, params *entity.ArticleSearchParams) (*entity.ArticleSearchResult, error)
 	GetPublishedArticles(ctx context.Context) ([]*entity.Article, error)
 	UpdateArticle(ctx context.Context, id uint, title, content string) (*entity.Article, error)
 	DeleteArticle(ctx context.Context, id uint) error
@@ -163,4 +164,23 @@ func (u *articleUsecase) UnpublishArticle(ctx context.Context, id uint) (*entity
 	})
 
 	return result, err
+}
+
+func (u *articleUsecase) GetAllArticlesWithFilters(ctx context.Context, params *entity.ArticleSearchParams) (*entity.ArticleSearchResult, error) {
+	if params == nil {
+		// If no filters provided, return all articles with default pagination
+		params = &entity.ArticleSearchParams{
+			Page:  1,
+			Limit: 20,
+		}
+	}
+	
+	// Set defaults and validate
+	params.SetDefaults()
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
+	
+	// Use the repository search method
+	return u.articleRepo.Search(ctx, params)
 }

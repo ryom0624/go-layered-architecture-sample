@@ -32,12 +32,14 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, userRepo, articleRepo, transactionManager)
+	searchUsecase := usecase.NewSearchUsecase(articleRepo)
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	articleHandler := handler.NewArticleHandler(articleUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
+	searchHandler := handler.NewSearchHandler(searchUsecase)
 
-	r := router.SetupRouter(userHandler, articleHandler, commentHandler)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {

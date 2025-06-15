@@ -136,6 +136,21 @@ func (m *MockArticleUsecase) UnpublishArticle(ctx context.Context, id uint) (*en
 	return article, nil
 }
 
+func (m *MockArticleUsecase) GetAllArticlesWithFilters(ctx context.Context, params *entity.ArticleSearchParams) (*entity.ArticleSearchResult, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	
+	return &entity.ArticleSearchResult{
+		Articles:   articles,
+		Total:      int64(len(articles)),
+		Page:       1,
+		Limit:      20,
+		TotalPages: 1,
+	}, nil
+}
+
 func setupArticleTestRouter(handler *ArticleHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

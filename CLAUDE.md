@@ -85,8 +85,10 @@ RESTful API with the following endpoints:
 
 #### Article Management
 - `POST /api/v1/articles` - Create article (requires title, content, author_id)
-- `GET /api/v1/articles` - Get all articles
+- `GET /api/v1/articles` - Get all articles (supports filtering via query parameters)
 - `GET /api/v1/articles/published` - Get published articles only
+- `GET /api/v1/articles/popular` - Get popular articles (ordered by publication date)
+- `GET /api/v1/articles/recent` - Get recent published articles
 - `GET /api/v1/articles/:id` - Get article by ID
 - `PUT /api/v1/articles/:id` - Update article (partial updates supported)
 - `DELETE /api/v1/articles/:id` - Delete article
@@ -94,6 +96,19 @@ RESTful API with the following endpoints:
 - `PUT /api/v1/articles/:id/unpublish` - Unpublish article (uses transaction)
 - `POST /api/v1/articles/:id/comments` - Create comment on article
 - `GET /api/v1/articles/:id/comments` - Get all comments for article
+
+#### Search and Filtering
+- `GET /api/v1/search` - Search articles with comprehensive filtering
+  - Query parameters:
+    - `query` - Full-text search query (title and content)
+    - `author_id` - Filter by author ID
+    - `status` - Filter by status (published, draft)
+    - `date_from` - Filter articles from date (YYYY-MM-DD format)
+    - `date_to` - Filter articles to date (YYYY-MM-DD format)
+    - `sort_by` - Sort field (created_at, updated_at, title, author, status, relevance)
+    - `sort_order` - Sort order (asc, desc)
+    - `page` - Page number for pagination (default: 1)
+    - `limit` - Items per page (default: 20, max: 100)
 
 #### Comment Management
 - `GET /api/v1/users/:id/comments` - Get all comments by user

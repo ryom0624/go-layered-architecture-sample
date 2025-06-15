@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
@@ -86,6 +87,58 @@ func (m *MockArticleRepository) Delete(ctx context.Context, id uint) error {
 
 func (m *MockArticleRepository) DeleteWithTx(ctx context.Context, tx repository.Transaction, id uint) error {
 	return m.Delete(ctx, id)
+}
+
+// Search methods for search functionality
+func (m *MockArticleRepository) Search(ctx context.Context, params *entity.ArticleSearchParams) (*entity.ArticleSearchResult, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	
+	// Simple implementation for testing
+	totalPages := 1
+	if len(articles) > params.Limit {
+		totalPages = (len(articles) + params.Limit - 1) / params.Limit
+	}
+	
+	return &entity.ArticleSearchResult{
+		Articles:   articles,
+		Total:      int64(len(articles)),
+		Page:       params.Page,
+		Limit:      params.Limit,
+		TotalPages: totalPages,
+	}, nil
+}
+
+func (m *MockArticleRepository) SearchWithFilters(ctx context.Context, query string, filters map[string]interface{}) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *MockArticleRepository) GetByDateRange(ctx context.Context, from, to time.Time) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *MockArticleRepository) GetPopular(ctx context.Context, limit int) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		if article.Status == "published" {
+			articles = append(articles, article)
+		}
+	}
+	return articles, nil
+}
+
+func (m *MockArticleRepository) CountByFilters(ctx context.Context, filters map[string]interface{}) (int64, error) {
+	return int64(len(m.articles)), nil
 }
 
 // MockTransactionManager implements repository.TransactionManager for testing
