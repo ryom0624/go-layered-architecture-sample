@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 📋 Development Flow Guide
+このプロジェクトでは標準化された開発フローを使用します。新しい機能開発やタスクを依頼する際は、`DEVELOPMENT_FLOW_GUIDE.md`を参照し、以下の指示形式を使用してください：
+
+```
+[タスク名]をDevelopment Workflowに従ってください。
+```
+
+これにより、Clean Architectureの原則に従った高品質で一貫性のある開発が保証されます。詳細な手順とベストプラクティスについては `DEVELOPMENT_FLOW_GUIDE.md` をご覧ください。
+
 ## Common Commands
 
 ### Development
