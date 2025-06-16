@@ -157,6 +157,21 @@ git merge feature/task-name
 - AuthMiddleware による認証制御
 - オプション認証ミドルウェアによる柔軟な認証
 
+#### ✅ Task 4: カテゴリ・タグ分類システム
+- **Category System**: 記事の階層的分類
+- **Tag System**: 記事の横断的タグ付け
+- **Slug Generation**: SEO対応URL生成（日本語→英語変換）
+- **Relationship Management**: 1対多（記事-カテゴリ）、多対多（記事-タグ）関係
+
+**実装パターン**:
+- Category エンティティで階層分類管理
+- Tag エンティティでタグシステム管理
+- 日本語→英語のスラッグ自動生成
+- 重複スラッグの自動解決（番号付与）
+- 色付きタグによる視覚的分類
+- 人気タグの使用頻度集計
+- 拡張検索パラメータ（カテゴリ・タグフィルタ）
+
 ### 開発ガイドライン
 
 #### コーディング規約
@@ -244,13 +259,13 @@ RESTful API with the following endpoints:
 - `DELETE /api/v1/users/:id` - Delete user
 
 #### Article Management
-- `POST /api/v1/articles` - Create article (requires title, content, author_id)
-- `GET /api/v1/articles` - Get all articles (supports filtering via query parameters)
+- `POST /api/v1/articles` - Create article (requires title, content, author_id; optional category_id, tags)
+- `GET /api/v1/articles` - Get all articles (supports filtering via query parameters including category_id, tags)
 - `GET /api/v1/articles/published` - Get published articles only
 - `GET /api/v1/articles/popular` - Get popular articles (ordered by publication date)
 - `GET /api/v1/articles/recent` - Get recent published articles
 - `GET /api/v1/articles/:id` - Get article by ID
-- `PUT /api/v1/articles/:id` - Update article (partial updates supported)
+- `PUT /api/v1/articles/:id` - Update article (partial updates supported; includes category_id, tags)
 - `DELETE /api/v1/articles/:id` - Delete article
 - `PUT /api/v1/articles/:id/publish` - Publish article (uses transaction)
 - `PUT /api/v1/articles/:id/unpublish` - Unpublish article (uses transaction)
@@ -262,6 +277,8 @@ RESTful API with the following endpoints:
   - Query parameters:
     - `query` - Full-text search query (title and content)
     - `author_id` - Filter by author ID
+    - `category_id` - Filter by category ID
+    - `tags` - Filter by tags (comma-separated tag names)
     - `status` - Filter by status (published, draft)
     - `date_from` - Filter articles from date (YYYY-MM-DD format)
     - `date_to` - Filter articles to date (YYYY-MM-DD format)
@@ -319,6 +336,24 @@ RESTful API with the following endpoints:
 - `GET /api/v1/users/:id/analytics` - Get user analytics
 - `GET /api/v1/articles/:id/statistics` - Get article statistics
 - `POST /api/v1/articles/:id/statistics/recalculate` - Recalculate article statistics
+
+#### Category Management
+- `POST /api/v1/categories` - Create category (requires name, optional description)
+- `GET /api/v1/categories` - Get all categories
+- `GET /api/v1/categories/with-count` - Get categories with article count
+- `GET /api/v1/categories/:slug` - Get category by slug
+- `PUT /api/v1/categories/:id` - Update category (partial updates supported)
+- `DELETE /api/v1/categories/:id` - Delete category
+- `GET /api/v1/categories/:slug/articles` - Get articles by category
+
+#### Tag Management
+- `POST /api/v1/tags` - Create tag (requires name, optional color)
+- `GET /api/v1/tags` - Get all tags
+- `GET /api/v1/tags/popular` - Get popular tags (ordered by usage count)
+- `GET /api/v1/tags/:slug` - Get tag by slug
+- `PUT /api/v1/tags/:id` - Update tag (partial updates supported)
+- `DELETE /api/v1/tags/:id` - Delete tag
+- `GET /api/v1/tags/articles` - Get articles by tags (comma-separated tag query parameter)
 
 ### Database Seeding Data
 The seed command creates comprehensive sample data for testing and development:

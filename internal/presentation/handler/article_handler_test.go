@@ -151,6 +151,38 @@ func (m *MockArticleUsecase) GetAllArticlesWithFilters(ctx context.Context, para
 	}, nil
 }
 
+func (m *MockArticleUsecase) CreateArticleWithCategoryAndTags(ctx context.Context, title, content string, authorID uint, categoryID *uint, tagNames []string) (*entity.Article, error) {
+	return m.CreateArticle(ctx, title, content, authorID)
+}
+
+func (m *MockArticleUsecase) GetArticlesByCategory(ctx context.Context, categorySlug string) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *MockArticleUsecase) GetArticlesByTags(ctx context.Context, tagSlugs []string) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *MockArticleUsecase) GetFilteredArticles(ctx context.Context, categorySlug string, tagSlugs []string) ([]*entity.Article, error) {
+	var articles []*entity.Article
+	for _, article := range m.articles {
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (m *MockArticleUsecase) UpdateArticleWithCategoryAndTags(ctx context.Context, id uint, title, content string, categoryID *uint, tagNames []string) (*entity.Article, error) {
+	return m.UpdateArticle(ctx, id, title, content)
+}
+
 func setupArticleTestRouter(handler *ArticleHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

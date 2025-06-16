@@ -445,6 +445,115 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **セキュリティテスト**: JWT検証、トークン期限確認、認証バイパス防止
 
+## カテゴリ・タグ分類システムテスト
+
+### ✅ ユースケース層テスト - Category
+**ファイル**: `internal/usecase/category_usecase_test.go`
+
+**テスト対象**: カテゴリビジネスロジック層の検証
+- `TestCategoryUsecase_CreateCategory`
+  - 正常なカテゴリ作成
+  - 重複カテゴリ名エラー
+  - 空の名前バリデーション
+- `TestCategoryUsecase_GetCategory`
+  - 存在するカテゴリの取得
+  - 存在しないカテゴリの取得
+  - 空のスラッグバリデーション
+- `TestCategoryUsecase_UpdateCategory`
+  - 正常なカテゴリ更新
+  - 存在しないカテゴリの更新
+  - ID=0での更新エラー
+- `TestCategoryUsecase_DeleteCategory`
+  - 正常なカテゴリ削除
+  - 存在しないカテゴリの削除
+  - ID=0での削除エラー
+- `TestCategoryUsecase_GetAllCategories`
+  - 空の状態での全カテゴリ取得
+  - データ存在時の全カテゴリ取得
+
+**モック実装**: `MockCategoryRepository` - カスタム実装
+
+### ✅ ユースケース層テスト - Tag
+**ファイル**: `internal/usecase/tag_usecase_test.go`
+
+**テスト対象**: タグビジネスロジック層の検証
+- `TestTagUsecase_CreateTag`
+  - 正常なタグ作成
+  - 重複タグ名エラー
+  - デフォルトカラーの適用
+- `TestTagUsecase_GetTag`
+  - 存在するタグの取得
+  - 存在しないタグの取得
+  - 空のスラッグバリデーション
+- `TestTagUsecase_UpdateTag`
+  - 正常なタグ更新
+  - 存在しないタグの更新
+  - ID=0での更新エラー
+- `TestTagUsecase_DeleteTag`
+  - 正常なタグ削除
+  - 存在しないタグの削除
+  - ID=0での削除エラー
+- `TestTagUsecase_GetOrCreateTags`
+  - 既存・新規タグの混在処理
+  - 空のタグ名配列処理
+  - 全て既存タグの処理
+- `TestTagUsecase_GetPopularTags`
+  - 人気タグの取得（制限付き）
+  - ゼロ制限でのデフォルト動作
+  - 最大制限超過時の制限適用
+
+**モック実装**: `MockTagRepository` - カスタム実装
+
+### ✅ ハンドラー層テスト - Category
+**ファイル**: `internal/presentation/handler/category_handler_test.go`
+
+**テスト対象**: カテゴリHTTP エンドポイントの検証
+- `TestCategoryHandler_CreateCategory`
+  - 正常なカテゴリ作成 (201 Created)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 必須フィールド不足 (400 Bad Request)
+- `TestCategoryHandler_GetCategory`
+  - 存在するカテゴリの取得 (200 OK)
+  - 存在しないカテゴリの取得 (404 Not Found)
+- `TestCategoryHandler_UpdateCategory`
+  - 正常なカテゴリ更新 (200 OK)
+  - 存在しないカテゴリの更新 (404 Not Found)
+  - 無効なID形式 (400 Bad Request)
+- `TestCategoryHandler_DeleteCategory`
+  - 正常なカテゴリ削除 (200 OK)
+  - 存在しないカテゴリの削除 (404 Not Found)
+  - 無効なID形式 (400 Bad Request)
+
+**モック実装**: `MockCategoryUsecase` - カスタム実装
+**テストルーター**: Gin テストモードでのHTTPテスト
+
+### ✅ ハンドラー層テスト - Tag
+**ファイル**: `internal/presentation/handler/tag_handler_test.go`
+
+**テスト対象**: タグHTTP エンドポイントの検証
+- `TestTagHandler_CreateTag`
+  - 正常なタグ作成 (201 Created)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 必須フィールド不足 (400 Bad Request)
+  - 重複タグ名エラー (409 Conflict)
+- `TestTagHandler_GetTag`
+  - 存在するタグの取得 (200 OK)
+  - 存在しないタグの取得 (404 Not Found)
+- `TestTagHandler_UpdateTag`
+  - 正常なタグ更新 (200 OK)
+  - 存在しないタグの更新 (404 Not Found)
+  - 無効なID形式 (400 Bad Request)
+- `TestTagHandler_DeleteTag`
+  - 正常なタグ削除 (200 OK)
+  - 存在しないタグの削除 (404 Not Found)
+  - 無効なID形式 (400 Bad Request)
+- `TestTagHandler_GetPopularTags`
+  - デフォルト制限での人気タグ取得 (200 OK)
+  - カスタム制限での人気タグ取得 (200 OK)
+
+**モック実装**: `MockTagUsecase` - カスタム実装
+**テストルーター**: Gin テストモードでのHTTPテスト
+
 ## お気に入り・ブックマーク機能テスト
 
 ### ✅ ユースケース層テスト - Favorite

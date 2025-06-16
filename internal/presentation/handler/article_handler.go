@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"layered-architecture-template/internal/domain/entity"
@@ -22,14 +23,18 @@ func NewArticleHandler(articleUsecase usecase.ArticleUsecase) *ArticleHandler {
 }
 
 type CreateArticleRequest struct {
-	Title    string `json:"title" binding:"required"`
-	Content  string `json:"content" binding:"required"`
-	AuthorID uint   `json:"author_id" binding:"required"`
+	Title      string   `json:"title" binding:"required"`
+	Content    string   `json:"content" binding:"required"`
+	AuthorID   uint     `json:"author_id" binding:"required"`
+	CategoryID *uint    `json:"category_id,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
 }
 
 type UpdateArticleRequest struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title      string   `json:"title"`
+	Content    string   `json:"content"`
+	CategoryID *uint    `json:"category_id,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
 }
 
 func (h *ArticleHandler) CreateArticle(c *gin.Context) {
@@ -39,7 +44,23 @@ func (h *ArticleHandler) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := h.articleUsecase.CreateArticle(c.Request.Context(), req.Title, req.Content, req.AuthorID)
+	var article *entity.Article
+	var err error
+
+	// Use appropriate create method based on whether category/tags are provided
+	if req.CategoryID != nil || len(req.Tags) > 0 {
+		article, err = h.articleUsecase.CreateArticleWithCategoryAndTags(
+			c.Request.Context(), 
+			req.Title, 
+			req.Content, 
+			req.AuthorID, 
+			req.CategoryID, 
+			req.Tags,
+		)
+	} else {
+		article, err = h.articleUsecase.CreateArticle(c.Request.Context(), req.Title, req.Content, req.AuthorID)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -93,6 +114,22 @@ func (h *ArticleHandler) GetAllArticlesWithFilters(c *gin.Context) {
 	if authorIDStr := c.Query("author_id"); authorIDStr != "" {
 		if authorID, err := strconv.ParseUint(authorIDStr, 10, 32); err == nil {
 			params.AuthorID = uint(authorID)
+		}
+	}
+	
+	// Parse category_id
+	if categoryIDStr := c.Query("category_id"); categoryIDStr != "" {
+		if categoryID, err := strconv.ParseUint(categoryIDStr, 10, 32); err == nil {
+			params.CategoryID = uint(categoryID)
+		}
+	}
+	
+	// Parse tags (comma-separated)
+	if tagsStr := c.Query("tags"); tagsStr != "" {
+		params.Tags = strings.Split(tagsStr, ",")
+		// Trim whitespace from each tag
+		for i, tag := range params.Tags {
+			params.Tags[i] = strings.TrimSpace(tag)
 		}
 	}
 	
@@ -162,13 +199,77 @@ func (h *ArticleHandler) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := h.articleUsecase.UpdateArticle(c.Request.Context(), uint(id), req.Title, req.Content)
+	var article *entity.Article
+
+	// Use appropriate update method based on whether category/tags are provided
+	if req.CategoryID != nil || len(req.Tags) > 0 {
+		article, err = h.articleUsecase.UpdateArticleWithCategoryAndTags(
+			c.Request.Context(), 
+			uint(id), 
+			req.Title, 
+			req.Content, 
+			req.CategoryID, 
+			req.Tags,
+		)
+	} else {
+		article, err = h.articleUsecase.UpdateArticle(c.Request.Context(), uint(id), req.Title, req.Content)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, article)
+}
+
+// GetArticlesByCategory handles GET /api/v1/categories/:slug/articles
+func (h *ArticleHandler) GetArticlesByCategory(c *gin.Context) {
+	slug := c.Param("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "category slug is required"})
+		return
+	}
+
+	articles, err := h.articleUsecase.GetArticlesByCategory(c.Request.Context(), slug)
+	if err != nil {
+		if err.Error() == "category not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, articles)
+}
+
+// GetArticlesByTags handles GET /api/v1/tags/articles with tag query parameter
+func (h *ArticleHandler) GetArticlesByTags(c *gin.Context) {
+	tagsStr := c.Query("tags")
+	if tagsStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tags query parameter is required"})
+		return
+	}
+
+	tagSlugs := strings.Split(tagsStr, ",")
+	// Trim whitespace from each tag
+	for i, tag := range tagSlugs {
+		tagSlugs[i] = strings.TrimSpace(tag)
+	}
+
+	if len(tagSlugs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one tag is required"})
+		return
+	}
+
+	articles, err := h.articleUsecase.GetArticlesByTags(c.Request.Context(), tagSlugs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, articles)
 }
 
 func (h *ArticleHandler) DeleteArticle(c *gin.Context) {

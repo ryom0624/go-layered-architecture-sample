@@ -159,8 +159,10 @@ func (m *MockTransaction) GetDB() interface{} { return nil }
 func TestArticleUsecase_CreateArticle(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
+	mockCategoryRepo := NewMockCategoryRepository()
+	mockTagRepo := NewMockTagRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockCategoryRepo, mockTagRepo, mockTxManager)
 	ctx := context.Background()
 
 	// Create a test user first
@@ -250,8 +252,10 @@ func TestArticleUsecase_CreateArticle(t *testing.T) {
 func TestArticleUsecase_GetArticle(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
+	mockCategoryRepo := NewMockCategoryRepository()
+	mockTagRepo := NewMockTagRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockCategoryRepo, mockTagRepo, mockTxManager)
 	ctx := context.Background()
 
 	// Create a test article
@@ -288,7 +292,7 @@ func TestArticleUsecase_UpdateArticle(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, NewMockCategoryRepository(), NewMockTagRepository(), mockTxManager)
 	ctx := context.Background()
 
 	// Create a test article
@@ -350,7 +354,7 @@ func TestArticleUsecase_PublishArticle(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, NewMockCategoryRepository(), NewMockTagRepository(), mockTxManager)
 	ctx := context.Background()
 
 	// Create a test article
@@ -396,7 +400,7 @@ func TestArticleUsecase_GetPublishedArticles(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, NewMockCategoryRepository(), NewMockTagRepository(), mockTxManager)
 	ctx := context.Background()
 
 	// Create test user
@@ -433,7 +437,7 @@ func TestArticleUsecase_DeleteArticle(t *testing.T) {
 	mockArticleRepo := NewMockArticleRepository()
 	mockUserRepo := NewMockUserRepository()
 	mockTxManager := &MockTransactionManager{}
-	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, mockTxManager)
+	usecase := NewArticleUsecase(mockArticleRepo, mockUserRepo, NewMockCategoryRepository(), NewMockTagRepository(), mockTxManager)
 	ctx := context.Background()
 
 	// Create a test article

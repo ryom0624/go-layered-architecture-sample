@@ -7,15 +7,17 @@ import (
 
 // ArticleSearchParams defines parameters for searching and filtering articles
 type ArticleSearchParams struct {
-	Query     string    `json:"query" form:"query"`           // Full-text search query
-	AuthorID  uint      `json:"author_id" form:"author_id"`   // Author filter
-	Status    string    `json:"status" form:"status"`         // Status filter
-	DateFrom  time.Time `json:"date_from" form:"date_from"`   // Date range start
-	DateTo    time.Time `json:"date_to" form:"date_to"`       // Date range end
-	SortBy    string    `json:"sort_by" form:"sort_by"`       // Sort field
-	SortOrder string    `json:"sort_order" form:"sort_order"` // asc/desc
-	Page      int       `json:"page" form:"page"`             // Page number
-	Limit     int       `json:"limit" form:"limit"`           // Page size
+	Query      string    `json:"query" form:"query"`             // Full-text search query
+	AuthorID   uint      `json:"author_id" form:"author_id"`     // Author filter
+	CategoryID uint      `json:"category_id" form:"category_id"` // Category filter
+	Tags       []string  `json:"tags" form:"tags"`               // Tag filters
+	Status     string    `json:"status" form:"status"`           // Status filter
+	DateFrom   time.Time `json:"date_from" form:"date_from"`     // Date range start
+	DateTo     time.Time `json:"date_to" form:"date_to"`         // Date range end
+	SortBy     string    `json:"sort_by" form:"sort_by"`         // Sort field
+	SortOrder  string    `json:"sort_order" form:"sort_order"`   // asc/desc
+	Page       int       `json:"page" form:"page"`               // Page number
+	Limit      int       `json:"limit" form:"limit"`             // Page size
 }
 
 // ArticleSearchResult represents the result of article search

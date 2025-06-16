@@ -25,7 +25,8 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 ├── tasks/                     # タスクドキュメント
 │   ├── 01_user.md            # User機能実装ドキュメント
 │   ├── 02_article.md         # Article機能実装ドキュメント
-│   └── 03_comment.md         # Comment機能実装ドキュメント
+│   ├── 03_comment.md         # Comment機能実装ドキュメント
+│   └── 04_category_tag.md    # Category・Tag機能実装ドキュメント
 ├── .env.example              # 環境変数のサンプル
 ├── docker-compose.yml        # Docker Compose設定
 ├── Dockerfile               # Docker設定
@@ -35,7 +36,7 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 ## アーキテクチャの特徴
 
 ### 1. ドメイン層 (Domain Layer)
-- **Entity**: ビジネスエンティティとルール（User, Article, Comment）
+- **Entity**: ビジネスエンティティとルール（User, Article, Comment, Category, Tag）
 - **Repository Interface**: データアクセスの抽象化（トランザクション対応）
 
 ### 2. アプリケーション層 (Application Layer)
@@ -71,7 +72,7 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 
 ### ✅ 検索・フィルタリング機能
 - 記事の全文検索（タイトル・本文）
-- 高度なフィルタリング（著者・ステータス・日付範囲）
+- 高度なフィルタリング（著者・カテゴリ・タグ・ステータス・日付範囲）
 - ソート機能（作成日・更新日・タイトル・著者・関連度）
 - ページネーション対応
 - 人気記事・最新記事取得
@@ -97,6 +98,14 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 - マルチデバイス対応（デバイス別ログアウト）
 - 安全なパスワードハッシュ化（bcrypt）
 - 認証ミドルウェアによるアクセス制御
+
+### ✅ カテゴリ・タグ分類システム
+- 記事カテゴリ管理（階層的分類）
+- 記事タグシステム（横断的分類）
+- SEO対応スラッグ生成（日本語→英語自動変換）
+- カテゴリ・タグによる記事検索・フィルタリング
+- 人気タグの使用頻度統計
+- 色付きタグによる視覚的分類
 
 ### ✅ トランザクション機能
 - 複数テーブル操作の整合性保証

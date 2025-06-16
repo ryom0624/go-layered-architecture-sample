@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, authHandler *handler.AuthHandler, viewUsecase usecase.ViewUsecase, authMiddleware gin.HandlerFunc, optionalAuthMiddleware gin.HandlerFunc) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, tagHandler *handler.TagHandler, viewUsecase usecase.ViewUsecase, authMiddleware gin.HandlerFunc, optionalAuthMiddleware gin.HandlerFunc) *gin.Engine {
 	r := gin.Default()
 	
 	// Add view tracking middleware
@@ -114,6 +114,30 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			readingLists.GET("/:id/articles", readingListHandler.GetReadingListArticles)
 			readingLists.DELETE("/:id/articles/:article_id", readingListHandler.RemoveArticleFromList)
 			readingLists.PUT("/:id/articles/:article_id", readingListHandler.UpdateReadingListItem)
+		}
+		
+		// Category routes
+		categories := api.Group("/categories")
+		{
+			categories.POST("", categoryHandler.CreateCategory)
+			categories.GET("", categoryHandler.GetAllCategories)
+			categories.GET("/with-count", categoryHandler.GetCategoriesWithCount)
+			categories.GET("/:slug", categoryHandler.GetCategory)
+			categories.PUT("/:id", categoryHandler.UpdateCategory)
+			categories.DELETE("/:id", categoryHandler.DeleteCategory)
+			categories.GET("/:slug/articles", articleHandler.GetArticlesByCategory)
+		}
+		
+		// Tag routes
+		tags := api.Group("/tags")
+		{
+			tags.POST("", tagHandler.CreateTag)
+			tags.GET("", tagHandler.GetAllTags)
+			tags.GET("/popular", tagHandler.GetPopularTags)
+			tags.GET("/:slug", tagHandler.GetTag)
+			tags.PUT("/:id", tagHandler.UpdateTag)
+			tags.DELETE("/:id", tagHandler.DeleteTag)
+			tags.GET("/articles", articleHandler.GetArticlesByTags)
 		}
 	}
 

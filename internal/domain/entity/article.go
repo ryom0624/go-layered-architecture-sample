@@ -9,12 +9,15 @@ type Article struct {
 	AuthorID      uint      `json:"author_id" gorm:"not null"`
 	Author        User      `json:"author" gorm:"foreignKey:AuthorID"`
 	Status        string    `json:"status" gorm:"default:'draft'"`
+	CategoryID    *uint     `json:"category_id,omitempty" gorm:"index"`
 	FavoriteCount int       `json:"favorite_count" gorm:"default:0"`
 	ViewCount     int       `json:"view_count" gorm:"default:0"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 
 	// Relations
+	Category              *Category              `json:"category,omitempty" gorm:"foreignKey:CategoryID"`
+	Tags                  []Tag                  `json:"tags,omitempty" gorm:"many2many:article_tags;"`
 	Favorites             []Favorite             `json:"favorites,omitempty" gorm:"foreignKey:ArticleID"`
 	ReadingListItems      []ReadingListItem      `json:"reading_list_items,omitempty" gorm:"foreignKey:ArticleID"`
 	Views                 []ArticleView          `json:"views,omitempty" gorm:"foreignKey:ArticleID"`
