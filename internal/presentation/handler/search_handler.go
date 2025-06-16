@@ -6,6 +6,7 @@ import (
 	"time"
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/usecase"
+	"layered-architecture-template/pkg/constants"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,7 +49,7 @@ func (h *SearchHandler) SearchArticles(c *gin.Context) {
 	
 	// Parse author_id
 	if authorIDStr := c.Query("author_id"); authorIDStr != "" {
-		if authorID, err := strconv.ParseUint(authorIDStr, 10, 32); err == nil {
+		if authorID, err := strconv.ParseUint(authorIDStr, constants.ParseUintBase, constants.ParseUintBitSize); err == nil {
 			params.AuthorID = uint(authorID)
 		}
 	}
@@ -106,7 +107,7 @@ func (h *SearchHandler) SearchArticles(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/articles/popular [get]
 func (h *SearchHandler) GetPopularArticles(c *gin.Context) {
-	limit := 10
+	limit := constants.DefaultItemsLimit
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
 			limit = parsedLimit
@@ -133,7 +134,7 @@ func (h *SearchHandler) GetPopularArticles(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/articles/recent [get]
 func (h *SearchHandler) GetRecentArticles(c *gin.Context) {
-	limit := 10
+	limit := constants.DefaultItemsLimit
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
 			limit = parsedLimit

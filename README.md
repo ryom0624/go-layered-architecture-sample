@@ -405,6 +405,36 @@ curl http://localhost:8080/api/v1/reading-lists/public
 - **Containerization**: Docker
 - **Testing**: 標準testingパッケージ, go-sqlmock, httptest
 
+## コード品質
+
+### マジックナンバー排除
+本プロジェクトでは、保守性とビジネスルールの透明性向上のため、すべてのマジックナンバーを排除し、中央集権的な定数管理を実装しています。
+
+#### 定数パッケージ構造
+```
+pkg/constants/
+├── config.go      # アプリケーション設定定数（ポート、トークン期間）
+├── validation.go  # バリデーション制限値（文字数制限、パスワード要件）
+├── pagination.go  # ページネーション・データ取得制限
+├── business.go    # ビジネスロジック定数（完読判定閾値、期間設定）
+└── parsing.go     # データ解析定数（進数、ビット数）
+```
+
+#### 主要定数
+- `DefaultServerPort = "8080"` - アプリケーションサーバーデフォルトポート
+- `DefaultAccessTokenDurationMinutes = 15` - JWTアクセストークン有効期限
+- `MaxCommentLength = 1000` - コメント最大文字数制限  
+- `MaxCommentDepth = 2` - コメント階層最大深度（3レベル対応）
+- `ReadCompletionThreshold = 90.0` - 記事完読判定閾値（90%）
+- `DefaultPageSize = 20` - デフォルトページサイズ
+- `MaxPageSize = 100` - 最大ページサイズ
+
+#### メリット
+- **保守性向上**: ビジネス要件変更時に単一箇所での変更が可能
+- **可読性向上**: 数値の意味が明確で理解しやすいコード
+- **一貫性確保**: プロジェクト全体で統一された制限値使用
+- **ドキュメント化**: 定数名によるビジネスルールの自己文書化
+
 ## 拡張方法
 
 ### 新しいエンティティの追加

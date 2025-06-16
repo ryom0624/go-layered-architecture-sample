@@ -327,3 +327,30 @@ The seed command creates sample data:
 - **25+ Comments**: Sample comments with hierarchical structure and different statuses
 - **Mixed Status**: Some articles published, some in draft status; comments with pending/approved/rejected status
 - **Relations**: Articles assigned to users, comments linked to articles and users with parent-child relationships
+
+## Constants Management
+
+### Magic Number Elimination
+The codebase follows a strict policy against magic numbers. All numeric values are centralized in the `pkg/constants/` package:
+
+#### Constants Structure
+- **pkg/constants/config.go**: Application configuration constants (ports, token durations)
+- **pkg/constants/validation.go**: Validation limits (string lengths, password requirements)
+- **pkg/constants/pagination.go**: Pagination and data retrieval limits
+- **pkg/constants/business.go**: Business logic constants (completion thresholds, time periods)
+- **pkg/constants/parsing.go**: Data parsing constants (base, bit size)
+
+#### Key Constants
+- `DefaultServerPort = "8080"` - Default application server port
+- `DefaultAccessTokenDurationMinutes = 15` - JWT access token expiry
+- `MaxCommentLength = 1000` - Maximum comment character limit
+- `MaxCommentDepth = 2` - Maximum comment nesting levels (3 total levels)
+- `ReadCompletionThreshold = 90.0` - Article completion percentage threshold
+- `DefaultPageSize = 20` - Default pagination page size
+- `MaxPageSize = 100` - Maximum pagination page size
+
+#### Usage Guidelines
+- Always use constants instead of hardcoded numbers
+- Import `layered-architecture-template/pkg/constants` in files requiring constants
+- Update constants when business requirements change rather than modifying hardcoded values
+- Group related constants in appropriate files within the constants package

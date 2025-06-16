@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"time"
+	"layered-architecture-template/pkg/constants"
+)
 
 // ArticleSearchParams defines parameters for searching and filtering articles
 type ArticleSearchParams struct {
@@ -30,9 +33,9 @@ func (p *ArticleSearchParams) SetDefaults() {
 		p.Page = 1
 	}
 	if p.Limit <= 0 {
-		p.Limit = 20
-	} else if p.Limit > 100 {
-		p.Limit = 100
+		p.Limit = constants.DefaultPageSize
+	} else if p.Limit > constants.MaxPageSize {
+		p.Limit = constants.MaxPageSize
 	}
 	if p.SortBy == "" {
 		if p.Query != "" {
@@ -48,13 +51,13 @@ func (p *ArticleSearchParams) SetDefaults() {
 
 // Validate validates search parameters
 func (p *ArticleSearchParams) Validate() error {
-	if p.Query != "" && len(p.Query) > 100 {
+	if p.Query != "" && len(p.Query) > constants.MaxSearchQueryLength {
 		return &ValidationError{Field: "query", Message: "query must be 100 characters or less"}
 	}
 	if p.Page < 1 {
 		return &ValidationError{Field: "page", Message: "page must be 1 or greater"}
 	}
-	if p.Limit < 1 || p.Limit > 100 {
+	if p.Limit < 1 || p.Limit > constants.MaxPageSize {
 		return &ValidationError{Field: "limit", Message: "limit must be between 1 and 100"}
 	}
 	if p.SortOrder != "" && p.SortOrder != "asc" && p.SortOrder != "desc" {

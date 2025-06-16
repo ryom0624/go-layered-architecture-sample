@@ -8,6 +8,7 @@ import (
 
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
+	"layered-architecture-template/pkg/constants"
 )
 
 type ReadingListUsecase interface {
@@ -47,10 +48,10 @@ func (u *readingListUsecaseImpl) CreateReadingList(ctx context.Context, name, de
 	if name == "" {
 		return nil, errors.New("reading list name is required")
 	}
-	if len(name) > 100 {
+	if len(name) > constants.MaxReadingListNameLength {
 		return nil, errors.New("reading list name must be 100 characters or less")
 	}
-	if len(description) > 500 {
+	if len(description) > constants.MaxReadingListDescriptionLength {
 		return nil, errors.New("description must be 500 characters or less")
 	}
 
@@ -81,10 +82,10 @@ func (u *readingListUsecaseImpl) UpdateReadingList(ctx context.Context, id uint,
 	if name == "" {
 		return nil, errors.New("reading list name is required")
 	}
-	if len(name) > 100 {
+	if len(name) > constants.MaxReadingListNameLength {
 		return nil, errors.New("reading list name must be 100 characters or less")
 	}
-	if len(description) > 500 {
+	if len(description) > constants.MaxReadingListDescriptionLength {
 		return nil, errors.New("description must be 500 characters or less")
 	}
 
@@ -156,7 +157,7 @@ func (u *readingListUsecaseImpl) GetPublicReadingLists(ctx context.Context) ([]*
 
 func (u *readingListUsecaseImpl) AddArticleToList(ctx context.Context, readingListID, articleID, userID uint, notes string) (*entity.ReadingListItem, error) {
 	// Validate notes length
-	if len(notes) > 1000 {
+	if len(notes) > constants.MaxReadingListItemNotesLength {
 		return nil, errors.New("notes must be 1000 characters or less")
 	}
 
@@ -230,7 +231,7 @@ func (u *readingListUsecaseImpl) RemoveArticleFromList(ctx context.Context, read
 
 func (u *readingListUsecaseImpl) UpdateReadingListItem(ctx context.Context, readingListID, articleID, userID uint, notes string) (*entity.ReadingListItem, error) {
 	// Validate notes length
-	if len(notes) > 1000 {
+	if len(notes) > constants.MaxReadingListItemNotesLength {
 		return nil, errors.New("notes must be 1000 characters or less")
 	}
 

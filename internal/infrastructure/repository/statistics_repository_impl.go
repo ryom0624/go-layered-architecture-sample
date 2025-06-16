@@ -5,6 +5,7 @@ import (
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
 	"time"
+	"layered-architecture-template/pkg/constants"
 
 	"gorm.io/gorm"
 )
@@ -206,7 +207,7 @@ func (r *statisticsRepositoryImpl) GetPlatformOverview(ctx context.Context) (*re
 		Where("DATE(article_views.viewed_at) = ? AND articles.status = ?", today, "published").
 		Group("articles.id").
 		Order("COUNT(article_views.id) DESC").
-		Limit(5).
+		Limit(constants.DailyPopularArticlesLimit).
 		Find(&overview.PopularToday)
 	
 	return &overview, nil
@@ -250,7 +251,7 @@ func (r *statisticsRepositoryImpl) GetUserAnalytics(ctx context.Context, userID 
 	r.db.WithContext(ctx).Model(&entity.UserReadingHistory{}).
 		Where("user_id = ?", userID).
 		Order("last_viewed_at DESC").
-		Limit(10).
+		Limit(constants.RecentReadingHistoryLimit).
 		Preload("Article").
 		Find(&analytics.RecentReadings)
 	

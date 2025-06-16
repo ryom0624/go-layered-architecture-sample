@@ -4,6 +4,7 @@ import (
 	"context"
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
+	"layered-architecture-template/pkg/constants"
 )
 
 type SearchUsecase interface {
@@ -38,10 +39,10 @@ func (u *searchUsecaseImpl) SearchArticles(ctx context.Context, params *entity.A
 
 func (u *searchUsecaseImpl) GetPopularArticles(ctx context.Context, limit int) ([]*entity.Article, error) {
 	if limit <= 0 {
-		limit = 10
+		limit = constants.DefaultItemsLimit
 	}
-	if limit > 50 {
-		limit = 50
+	if limit > constants.MaxItemsLimit {
+		limit = constants.MaxItemsLimit
 	}
 	
 	return u.articleRepo.GetPopular(ctx, limit)
@@ -49,10 +50,10 @@ func (u *searchUsecaseImpl) GetPopularArticles(ctx context.Context, limit int) (
 
 func (u *searchUsecaseImpl) GetRecentArticles(ctx context.Context, limit int) ([]*entity.Article, error) {
 	if limit <= 0 {
-		limit = 10
+		limit = constants.DefaultItemsLimit
 	}
-	if limit > 50 {
-		limit = 50
+	if limit > constants.MaxItemsLimit {
+		limit = constants.MaxItemsLimit
 	}
 	
 	// Get recent articles by filtering with status = published and ordering by created_at desc

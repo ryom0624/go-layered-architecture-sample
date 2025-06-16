@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"layered-architecture-template/pkg/constants"
 )
 
 type Config struct {
@@ -40,20 +41,20 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8080"),
+			Port: getEnv("SERVER_PORT", constants.DefaultServerPort),
 		},
 		Database: DatabaseConfig{
 			Driver:   getEnv("DB_DRIVER", "postgres"),
 			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
+			Port:     getEnv("DB_PORT", constants.DefaultPostgreSQLPort),
 			User:     getEnv("DB_USER", "user"),
 			Password: getEnv("DB_PASSWORD", "password"),
 			Name:     getEnv("DB_NAME", "database"),
 		},
 		Auth: AuthConfig{
 			JWTSecret:            getEnv("JWT_SECRET", "your-secret-key"),
-			AccessTokenDuration:  time.Duration(getEnvInt("ACCESS_TOKEN_DURATION_MINUTES", 15)) * time.Minute,
-			RefreshTokenDuration: time.Duration(getEnvInt("REFRESH_TOKEN_DURATION_DAYS", 7)) * 24 * time.Hour,
+			AccessTokenDuration:  time.Duration(getEnvInt("ACCESS_TOKEN_DURATION_MINUTES", constants.DefaultAccessTokenDurationMinutes)) * time.Minute,
+			RefreshTokenDuration: time.Duration(getEnvInt("REFRESH_TOKEN_DURATION_DAYS", constants.DefaultRefreshTokenDurationDays)) * constants.HoursPerDay * time.Hour,
 		},
 	}
 

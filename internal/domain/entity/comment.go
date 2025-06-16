@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"time"
+	"layered-architecture-template/pkg/constants"
+)
 
 type Comment struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
@@ -24,7 +27,7 @@ func (c *Comment) ValidateContent() error {
 	if c.Content == "" {
 		return &ValidationError{Field: "content", Message: "content is required"}
 	}
-	if len(c.Content) > 1000 {
+	if len(c.Content) > constants.MaxCommentLength {
 		return &ValidationError{Field: "content", Message: "content must be 1000 characters or less"}
 	}
 	return nil

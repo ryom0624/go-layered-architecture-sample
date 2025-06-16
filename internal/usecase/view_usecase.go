@@ -6,6 +6,7 @@ import (
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
 	"time"
+	"layered-architecture-template/pkg/constants"
 )
 
 type ViewUsecase interface {
@@ -48,7 +49,7 @@ func (v *viewUsecase) TrackView(ctx context.Context, articleID uint, userID *uin
 		return errors.New("article is not published")
 	}
 	
-	since := time.Now().Add(-15 * time.Minute)
+	since := time.Now().Add(-constants.DuplicateViewThresholdMinutes * time.Minute)
 	existingViews, err := v.viewRepo.GetViewsByIPAndArticle(ctx, ipAddress, articleID, since)
 	if err == nil && len(existingViews) > 0 {
 		return nil
@@ -110,7 +111,7 @@ func (v *viewUsecase) TrackReadingProgress(ctx context.Context, userID uint, art
 		return errors.New("article is not published")
 	}
 	
-	isCompleted := progress >= 90.0
+	isCompleted := progress >= constants.ReadCompletionThreshold
 	
 	return v.viewRepo.UpdateReadingProgress(ctx, userID, articleID, progress, readingTime, isCompleted)
 }
@@ -130,8 +131,8 @@ func (v *viewUsecase) GetUserReadingHistories(ctx context.Context, userID uint, 
 	if page < 1 {
 		page = 1
 	}
-	if limit <= 0 || limit > 100 {
-		limit = 20
+	if limit <= 0 || limit > constants.MaxPageSize {
+		limit = constants.DefaultReadingHistoryPageSize
 	}
 	
 	offset := (page - 1) * limit
@@ -139,11 +140,11 @@ func (v *viewUsecase) GetUserReadingHistories(ctx context.Context, userID uint, 
 }
 
 func (v *viewUsecase) GetPopularArticles(ctx context.Context, limit int, days int) ([]*entity.Article, error) {
-	if limit <= 0 || limit > 100 {
-		limit = 10
+	if limit <= 0 || limit > constants.MaxPageSize {
+		limit = constants.DefaultPopularArticlesLimit
 	}
 	if days <= 0 {
-		days = 7
+		days = constants.PopularArticlesPeriodDays
 	}
 	
 	since := time.Now().AddDate(0, 0, -days)
@@ -151,11 +152,11 @@ func (v *viewUsecase) GetPopularArticles(ctx context.Context, limit int, days in
 }
 
 func (v *viewUsecase) GetTrendingArticles(ctx context.Context, limit int, hours int) ([]*entity.Article, error) {
-	if limit <= 0 || limit > 100 {
-		limit = 10
+	if limit <= 0 || limit > constants.MaxPageSize {
+		limit = constants.DefaultTrendingArticlesLimit
 	}
 	if hours <= 0 {
-		hours = 24
+		hours = constants.TrendingArticlesPeriodHours
 	}
 	
 	since := time.Now().Add(-time.Duration(hours) * time.Hour)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"layered-architecture-template/pkg/constants"
 )
 
 type JWTManager struct {
@@ -86,7 +87,7 @@ func (m *JWTManager) VerifyToken(tokenString string) (*entity.TokenClaims, error
 }
 
 func GenerateRefreshToken() (string, error) {
-	bytes := make([]byte, 32)
+	bytes := make([]byte, constants.RefreshTokenRandomBytes)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}

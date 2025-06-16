@@ -5,6 +5,7 @@ import (
 	"errors"
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
+	"layered-architecture-template/pkg/constants"
 )
 
 type CommentUsecase interface {
@@ -113,7 +114,7 @@ func (u *commentUsecase) CreateReply(ctx context.Context, content string, author
 	if err != nil {
 		return nil, err
 	}
-	if depth >= 2 { // 0-indexed, so 2 means 3 levels deep
+	if depth >= constants.MaxCommentDepth { // 0-indexed, so 2 means 3 levels deep
 		return nil, errors.New("maximum reply depth exceeded")
 	}
 
