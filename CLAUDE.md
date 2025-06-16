@@ -27,6 +27,110 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./scripts/docker-seed.sh` - Run seed script in Docker container
 - `docker compose run --rm app go run cmd/seed/main.go` - Direct Docker seeding
 
+## Development Workflow
+
+### Feature Implementation Process
+新機能開発時の標準的な開発フローです。Clean Architectureの依存関係ルールに従って内側から外側へ実装します。
+
+#### 1. 計画・設計フェーズ
+- `tasks/` ディレクトリの実装計画書を確認
+- データ設計（エンティティ、リレーション）の検討
+- API設計（エンドポイント、リクエスト/レスポンス）の定義
+- アーキテクチャ設計（各レイヤーの責務）の明確化
+
+#### 2. ブランチ作成
+```bash
+git checkout -b feature/task-name
+```
+
+#### 3. 実装順序（Clean Architecture準拠）
+**依存関係ルール**: 内側の層は外側の層に依存しない
+
+1. **Domain Layer（内側）**
+   - `internal/domain/entity/` - エンティティ定義
+   - `internal/domain/repository/` - リポジトリインターフェース定義
+
+2. **Infrastructure Layer（外側）**
+   - `internal/infrastructure/repository/` - リポジトリ実装
+   - データベース操作、トランザクション対応
+
+3. **Application Layer（ユースケース）**
+   - `internal/usecase/` - ビジネスロジック実装
+   - バリデーション、エラーハンドリング
+
+4. **Presentation Layer（外側）**
+   - `internal/presentation/handler/` - HTTPハンドラー実装
+   - `internal/presentation/router/` - ルーティング設定
+
+5. **Dependency Injection（配線）**
+   - `cmd/main.go` - 依存関係の配線
+
+#### 4. テスト実装
+各レイヤーでテストを実装（カスタムモック使用）
+テストの実行が成功するまでテストコードを修正する
+```bash
+go test ./...  # 全テスト実行
+```
+
+#### 5. ドキュメント更新
+- `CLAUDE.md` - API エンドポイント追加
+- `TEST_PLAN.md` - テスト計画追加
+- `README.md` - 機能説明、使用例追加
+
+#### 6. マージ
+```bash
+git checkout task-documentation
+git merge feature/task-name
+```
+
+### 実装済み機能の開発履歴
+
+#### ✅ Task 1-3: 基本機能実装
+- **User Management**: CRUD操作、バリデーション
+- **Article Management**: CRUD操作、公開/非公開、トランザクション対応
+- **Comment System**: 階層構造、承認機能、モデレーション
+
+#### ✅ Task 5: 検索・フィルタリング機能
+- **Full-text Search**: タイトル・本文の全文検索
+- **Advanced Filtering**: 著者・ステータス・日付範囲フィルタ
+- **Sorting & Pagination**: 複数ソートオプション、ページネーション
+- **Popular/Recent Articles**: 人気記事・最新記事エンドポイント
+
+**実装パターン**:
+- SearchParams エンティティでパラメータ管理
+- Repository層で動的クエリ構築
+- Usecase層でバリデーションとビジネスロジック
+- Handler層でHTTPパラメータ解析
+
+#### 🚧 Task 6: お気に入り・ブックマーク機能（次回実装）
+- **Favorite System**: 記事お気に入り機能
+- **Reading Lists**: カスタム読書リスト作成・管理
+- **Public/Private Lists**: 公開・非公開リスト機能
+
+#### 📋 Task 7: 閲覧履歴・統計機能（実装予定）
+- **View Tracking**: 記事閲覧の自動トラッキング
+- **Reading Analytics**: ユーザー読書分析
+- **Platform Statistics**: プラットフォーム統計情報
+
+### 開発ガイドライン
+
+#### コーディング規約
+- **Clean Architecture**: 依存関係ルールの厳守
+- **Error Handling**: 適切なエラーハンドリングとバリデーション
+- **Transaction Management**: データ整合性を保つトランザクション使用
+- **Testing**: 各レイヤーでのユニットテスト・統合テスト実装
+
+#### 命名規約
+- **Interface**: `XxxRepository`, `XxxUsecase`
+- **Implementation**: `xxxRepositoryImpl`, `xxxUsecaseImpl`
+- **Handler**: `XxxHandler`
+- **Entity**: パスカルケース（`User`, `Article`）
+
+#### ファイル構成
+- **Test Files**: `*_test.go` でソースファイルと同階層
+- **Mock Implementation**: カスタムモック、外部ライブラリ不使用
+- **Documentation**: 各機能の実装計画とAPIドキュメント維持
+
 ## Architecture Overview
 
 This is a Clean Architecture implementation with strict dependency rules:
@@ -51,7 +155,7 @@ This is a Clean Architecture implementation with strict dependency rules:
 ### Adding New Features
 When adding new entities, follow this sequence:
 1. Entity in `internal/domain/entity/`
-2. Repository interface in `internal/domain/repository/`  
+2. Repository interface in `internal/domain/repository/`
 3. Repository implementation in `internal/infrastructure/repository/`
 4. Use case in `internal/usecase/`
 5. Handler in `internal/presentation/handler/`
