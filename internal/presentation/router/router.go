@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler) *gin.Engine {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
@@ -19,6 +19,8 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			users.PUT("/:id", userHandler.UpdateUser)
 			users.DELETE("/:id", userHandler.DeleteUser)
 			users.GET("/:id/comments", commentHandler.GetUserComments)
+			users.GET("/:id/favorites", favoriteHandler.GetUserFavorites)
+			users.GET("/:id/reading-lists/public", readingListHandler.GetUserReadingLists)
 		}
 
 		articles := api.Group("/articles")
@@ -37,6 +39,12 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			// Comment routes for articles
 			articles.POST("/:id/comments", commentHandler.CreateCommentOnArticle)
 			articles.GET("/:id/comments", commentHandler.GetArticleComments)
+			
+			// Favorite routes for articles
+			articles.POST("/:id/favorite", favoriteHandler.AddFavorite)
+			articles.DELETE("/:id/favorite", favoriteHandler.RemoveFavorite)
+			articles.GET("/:id/favorites", favoriteHandler.GetArticleFavorites)
+			articles.GET("/:id/favorite-status", favoriteHandler.CheckFavoriteStatus)
 		}
 
 		comments := api.Group("/comments")
@@ -52,6 +60,21 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 
 		// Search routes
 		api.GET("/search", searchHandler.SearchArticles)
+		
+		// Reading list routes
+		readingLists := api.Group("/reading-lists")
+		{
+			readingLists.POST("", readingListHandler.CreateReadingList)
+			readingLists.GET("", readingListHandler.GetUserReadingLists)
+			readingLists.GET("/public", readingListHandler.GetPublicReadingLists)
+			readingLists.GET("/:id", readingListHandler.GetReadingList)
+			readingLists.PUT("/:id", readingListHandler.UpdateReadingList)
+			readingLists.DELETE("/:id", readingListHandler.DeleteReadingList)
+			readingLists.POST("/:id/articles", readingListHandler.AddArticleToList)
+			readingLists.GET("/:id/articles", readingListHandler.GetReadingListArticles)
+			readingLists.DELETE("/:id/articles/:article_id", readingListHandler.RemoveArticleFromList)
+			readingLists.PUT("/:id/articles/:article_id", readingListHandler.UpdateReadingListItem)
+		}
 	}
 
 	return r

@@ -28,18 +28,24 @@ func main() {
 	userRepo := repository.NewUserRepository(db.DB)
 	articleRepo := repository.NewArticleRepository(db.DB)
 	commentRepo := repository.NewCommentRepository(db.DB)
+	favoriteRepo := repository.NewFavoriteRepository(db.DB)
+	readingListRepo := repository.NewReadingListRepository(db.DB)
 
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, userRepo, articleRepo, transactionManager)
 	searchUsecase := usecase.NewSearchUsecase(articleRepo)
+	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo, articleRepo, userRepo, transactionManager)
+	readingListUsecase := usecase.NewReadingListUsecase(readingListRepo, articleRepo, userRepo)
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	articleHandler := handler.NewArticleHandler(articleUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
 	searchHandler := handler.NewSearchHandler(searchUsecase)
+	favoriteHandler := handler.NewFavoriteHandler(favoriteUsecase)
+	readingListHandler := handler.NewReadingListHandler(readingListUsecase)
 
-	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {

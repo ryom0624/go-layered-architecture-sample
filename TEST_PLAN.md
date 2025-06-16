@@ -367,6 +367,126 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 **モック実装**: `MockSearchUsecase` - カスタム実装
 **テストルーター**: Gin テストモードでのHTTPテスト
 
+## お気に入り・ブックマーク機能テスト
+
+### 🚧 ユースケース層テスト - Favorite（実装予定）
+**ファイル**: `internal/usecase/favorite_usecase_test.go`
+
+**テスト対象**: お気に入りビジネスロジック層の検証（トランザクション対応）
+- `TestFavoriteUsecase_AddFavorite`
+  - 正常なお気に入り追加（トランザクション使用・カウント更新）
+  - 存在しないユーザーでのエラー
+  - 存在しない記事でのエラー
+  - 未公開記事のお気に入りエラー
+  - 重複お気に入りエラー
+- `TestFavoriteUsecase_RemoveFavorite`
+  - 正常なお気に入り削除（トランザクション使用・カウント更新）
+  - 存在しないお気に入りでのエラー
+  - 存在しない記事でのエラー
+- `TestFavoriteUsecase_GetUserFavorites`
+  - ユーザーのお気に入り記事取得
+  - 存在しないユーザーでのエラー
+- `TestFavoriteUsecase_GetArticleFavorites`
+  - 記事をお気に入りしたユーザー取得
+  - 存在しない記事でのエラー
+- `TestFavoriteUsecase_IsFavorited`
+  - お気に入りステータス確認
+
+**モック実装**: `MockFavoriteRepository`, `MockArticleRepository`, `MockUserRepository`, `MockTransactionManager`
+
+### 🚧 ユースケース層テスト - ReadingList（実装予定）
+**ファイル**: `internal/usecase/reading_list_usecase_test.go`
+
+**テスト対象**: 読書リストビジネスロジック層の検証
+- `TestReadingListUsecase_CreateReadingList`
+  - 正常な読書リスト作成
+  - 名前バリデーション（必須・長さ制限）
+  - 説明バリデーション（長さ制限）
+  - 存在しないユーザーでのエラー
+- `TestReadingListUsecase_UpdateReadingList`
+  - 正常な読書リスト更新
+  - 権限確認（所有者のみ更新可能）
+  - 存在しない読書リストでのエラー
+- `TestReadingListUsecase_DeleteReadingList`
+  - 正常な読書リスト削除（関連アイテムも削除）
+  - 権限確認（所有者のみ削除可能）
+- `TestReadingListUsecase_AddArticleToList`
+  - 正常な記事追加
+  - メモ機能（文字数制限）
+  - 重複記事追加エラー
+  - 権限確認（所有者のみ追加可能）
+- `TestReadingListUsecase_GetPublicReadingLists`
+  - 公開読書リスト取得
+- `TestReadingListUsecase_GetReadingList`
+  - プライバシー設定確認（公開・非公開アクセス制御）
+
+**モック実装**: `MockReadingListRepository`, `MockArticleRepository`, `MockUserRepository`
+
+### 🚧 ハンドラー層テスト - Favorite（実装予定）
+**ファイル**: `internal/presentation/handler/favorite_handler_test.go`
+
+**テスト対象**: お気に入りHTTP エンドポイントの検証
+- `TestFavoriteHandler_AddFavorite`
+  - 正常なお気に入り追加 (201 Created)
+  - 認証エラー (401 Unauthorized)
+  - 重複エラー (400 Bad Request)
+- `TestFavoriteHandler_RemoveFavorite`
+  - 正常なお気に入り削除 (200 OK)
+  - 存在しないお気に入り (404 Not Found)
+- `TestFavoriteHandler_GetUserFavorites`
+  - ユーザーのお気に入り取得 (200 OK)
+- `TestFavoriteHandler_CheckFavoriteStatus`
+  - お気に入りステータス確認 (200 OK)
+
+**モック実装**: `MockFavoriteUsecase` - カスタム実装
+
+### 🚧 ハンドラー層テスト - ReadingList（実装予定）
+**ファイル**: `internal/presentation/handler/reading_list_handler_test.go`
+
+**テスト対象**: 読書リストHTTP エンドポイントの検証
+- `TestReadingListHandler_CreateReadingList`
+  - 正常な読書リスト作成 (201 Created)
+  - バリデーションエラー (400 Bad Request)
+- `TestReadingListHandler_AddArticleToList`
+  - 正常な記事追加 (201 Created)
+  - 権限エラー (403 Forbidden)
+- `TestReadingListHandler_GetPublicReadingLists`
+  - 公開読書リスト取得 (200 OK)
+
+**モック実装**: `MockReadingListUsecase` - カスタム実装
+
+### 🚧 リポジトリ層テスト - Favorite（実装予定）
+**ファイル**: `internal/infrastructure/repository/favorite_repository_impl_test.go`
+
+**テスト対象**: お気に入りデータベース操作層の検証
+- `TestFavoriteRepositoryImpl_Create`
+  - 正常なお気に入り作成
+  - 複合ユニーク制約の検証
+- `TestFavoriteRepositoryImpl_CreateWithTx`
+  - トランザクション内でのお気に入り作成
+- `TestFavoriteRepositoryImpl_IsFavorited`
+  - お気に入りステータス確認
+- `TestFavoriteRepositoryImpl_GetFavoriteCount`
+  - お気に入り数取得
+
+**使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM
+
+### 🚧 リポジトリ層テスト - ReadingList（実装予定）
+**ファイル**: `internal/infrastructure/repository/reading_list_repository_impl_test.go`
+
+**テスト対象**: 読書リストデータベース操作層の検証
+- `TestReadingListRepositoryImpl_Create`
+  - 正常な読書リスト作成
+- `TestReadingListRepositoryImpl_AddItem`
+  - 読書リストアイテム追加
+  - 複合ユニーク制約の検証
+- `TestReadingListRepositoryImpl_GetPublic`
+  - 公開読書リスト取得
+- `TestReadingListRepositoryImpl_Delete`
+  - カスケード削除の検証（リスト削除時のアイテム削除）
+
+**使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM
+
 ## 共通機能テスト
 
 ### ✅ 設定パッケージテスト
@@ -426,6 +546,17 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 #### 共通機能: 1ファイル
 - Config テスト
+
+### 実装予定テストファイル数: 6ファイル
+#### お気に入り機能: 3ファイル
+- UseCase テスト（トランザクション対応・カウント機能含む）
+- Handler テスト（認証・権限確認含む）
+- Repository テスト（複合ユニーク制約含む）
+
+#### 読書リスト機能: 3ファイル
+- UseCase テスト（権限管理・プライバシー設定含む）
+- Handler テスト（アクセス制御含む）
+- Repository テスト（カスケード削除含む）
 
 ### テストケース総数: 約150+テストケース
 - 正常系テスト

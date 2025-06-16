@@ -76,6 +76,13 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 - ページネーション対応
 - 人気記事・最新記事取得
 
+### ✅ お気に入り・ブックマーク機能
+- 記事お気に入り機能（追加・削除・一覧表示）
+- カスタム読書リスト作成・管理
+- 読書リストへの記事追加・削除・メモ機能
+- 公開・非公開読書リスト設定
+- お気に入り数の自動カウント・トランザクション対応
+
 ### ✅ トランザクション機能
 - 複数テーブル操作の整合性保証
 - エラー時の自動ロールバック
@@ -161,6 +168,32 @@ docker compose up
 | PUT | `/api/v1/comments/:id/approve` | コメント承認 |
 | PUT | `/api/v1/comments/:id/reject` | コメント拒否 |
 
+### お気に入り管理
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/articles/:id/favorite` | 記事をお気に入りに追加 |
+| DELETE | `/api/v1/articles/:id/favorite` | 記事をお気に入りから削除 |
+| GET | `/api/v1/users/:id/favorites` | ユーザーのお気に入り記事取得 |
+| GET | `/api/v1/articles/:id/favorites` | 記事をお気に入りしたユーザー取得 |
+| GET | `/api/v1/articles/:id/favorite-status` | お気に入りステータス確認 |
+
+### 読書リスト管理
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/reading-lists` | 読書リスト作成 |
+| GET | `/api/v1/reading-lists` | ユーザーの読書リスト取得 |
+| GET | `/api/v1/reading-lists/:id` | 読書リスト詳細取得 |
+| PUT | `/api/v1/reading-lists/:id` | 読書リスト更新 |
+| DELETE | `/api/v1/reading-lists/:id` | 読書リスト削除 |
+| POST | `/api/v1/reading-lists/:id/articles` | 読書リストに記事追加 |
+| GET | `/api/v1/reading-lists/:id/articles` | 読書リスト内の記事取得 |
+| DELETE | `/api/v1/reading-lists/:id/articles/:article_id` | 読書リストから記事削除 |
+| PUT | `/api/v1/reading-lists/:id/articles/:article_id` | 読書リストアイテム更新 |
+| GET | `/api/v1/reading-lists/public` | 公開読書リスト取得 |
+| GET | `/api/v1/users/:id/reading-lists/public` | ユーザーの公開読書リスト取得 |
+
 ### リクエスト例
 
 #### ユーザー作成
@@ -242,6 +275,44 @@ curl "http://localhost:8080/api/v1/articles/popular?limit=10"
 #### 最新記事取得
 ```bash
 curl "http://localhost:8080/api/v1/articles/recent?limit=5"
+```
+
+#### お気に入り追加
+```bash
+curl -X POST http://localhost:8080/api/v1/articles/1/favorite \
+  -H "userID: 1"
+```
+
+#### お気に入り削除
+```bash
+curl -X DELETE http://localhost:8080/api/v1/articles/1/favorite \
+  -H "userID: 1"
+```
+
+#### ユーザーのお気に入り記事取得
+```bash
+curl http://localhost:8080/api/v1/users/1/favorites
+```
+
+#### 読書リスト作成
+```bash
+curl -X POST http://localhost:8080/api/v1/reading-lists \
+  -H "Content-Type: application/json" \
+  -H "userID: 1" \
+  -d '{"name": "プログラミング学習", "description": "Go言語とアーキテクチャ", "is_public": false}'
+```
+
+#### 読書リストに記事追加
+```bash
+curl -X POST http://localhost:8080/api/v1/reading-lists/1/articles \
+  -H "Content-Type: application/json" \
+  -H "userID: 1" \
+  -d '{"article_id": 1, "notes": "後で詳しく読む"}'
+```
+
+#### 公開読書リスト取得
+```bash
+curl http://localhost:8080/api/v1/reading-lists/public
 ```
 
 ## 環境変数

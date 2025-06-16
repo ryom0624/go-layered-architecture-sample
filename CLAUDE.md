@@ -102,10 +102,17 @@ git merge feature/task-name
 - Usecase層でバリデーションとビジネスロジック
 - Handler層でHTTPパラメータ解析
 
-#### 🚧 Task 6: お気に入り・ブックマーク機能（次回実装）
+#### ✅ Task 6: お気に入り・ブックマーク機能
 - **Favorite System**: 記事お気に入り機能
 - **Reading Lists**: カスタム読書リスト作成・管理
 - **Public/Private Lists**: 公開・非公開リスト機能
+
+**実装パターン**:
+- Favorite エンティティでお気に入り管理
+- ReadingList, ReadingListItem エンティティで読書リスト管理
+- トランザクション内でお気に入り数更新
+- アクセス制御（公開・非公開読書リスト）
+- 複合ユニーク制約で重複防止
 
 #### 📋 Task 7: 閲覧履歴・統計機能（実装予定）
 - **View Tracking**: 記事閲覧の自動トラッキング
@@ -223,6 +230,30 @@ RESTful API with the following endpoints:
 - `GET /api/v1/comments/pending` - Get all pending comments (moderation)
 - `PUT /api/v1/comments/:id/approve` - Approve comment (moderation)
 - `PUT /api/v1/comments/:id/reject` - Reject comment (moderation)
+
+#### Favorite Management
+- `POST /api/v1/articles/:id/favorite` - Add article to favorites
+- `DELETE /api/v1/articles/:id/favorite` - Remove article from favorites
+- `GET /api/v1/users/:id/favorites` - Get user's favorite articles
+- `GET /api/v1/articles/:id/favorites` - Get users who favorited article
+- `GET /api/v1/articles/:id/favorite-status` - Check if current user favorited article
+
+#### Reading List Management
+- `POST /api/v1/reading-lists` - Create reading list
+- `GET /api/v1/reading-lists` - Get user's reading lists
+- `GET /api/v1/reading-lists/:id` - Get reading list details
+- `PUT /api/v1/reading-lists/:id` - Update reading list
+- `DELETE /api/v1/reading-lists/:id` - Delete reading list
+
+#### Reading List Items
+- `POST /api/v1/reading-lists/:id/articles` - Add article to reading list
+- `DELETE /api/v1/reading-lists/:id/articles/:article_id` - Remove article from reading list
+- `GET /api/v1/reading-lists/:id/articles` - Get articles in reading list
+- `PUT /api/v1/reading-lists/:id/articles/:article_id` - Update reading list item notes
+
+#### Public Reading Lists
+- `GET /api/v1/reading-lists/public` - Get public reading lists
+- `GET /api/v1/users/:id/reading-lists/public` - Get user's public reading lists
 
 ### Database Seeding Data
 The seed command creates sample data:
