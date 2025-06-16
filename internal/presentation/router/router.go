@@ -4,12 +4,17 @@ import (
 	"layered-architecture-template/internal/presentation/handler"
 	"layered-architecture-template/internal/presentation/middleware"
 	"layered-architecture-template/internal/usecase"
+	"layered-architecture-template/pkg/config"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, tagHandler *handler.TagHandler, viewUsecase usecase.ViewUsecase, authMiddleware gin.HandlerFunc, optionalAuthMiddleware gin.HandlerFunc) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, tagHandler *handler.TagHandler, viewUsecase usecase.ViewUsecase, authMiddleware gin.HandlerFunc, optionalAuthMiddleware gin.HandlerFunc, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
+	
+	// Add CORS middleware
+	corsConfig := middleware.NewCORSConfig(cfg)
+	r.Use(middleware.CORS(corsConfig))
 	
 	// Add view tracking middleware
 	r.Use(middleware.ViewTrackingMiddleware(viewUsecase))

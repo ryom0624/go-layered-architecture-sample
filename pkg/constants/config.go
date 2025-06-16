@@ -9,4 +9,10 @@ const (
 	HoursPerDay                       = 24
 	
 	RefreshTokenRandomBytes = 32
+	
+	// CORS defaults
+	DefaultCORSAllowedOrigins   = "*"
+	DefaultCORSAllowedMethods   = "GET,POST,PUT,DELETE,OPTIONS"
+	DefaultCORSAllowedHeaders   = "Content-Type,Authorization,X-Requested-With"
+	DefaultCORSAllowCredentials = true
 )

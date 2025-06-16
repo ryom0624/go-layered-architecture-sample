@@ -67,7 +67,7 @@ func main() {
 	authMiddleware := middleware.AuthMiddleware(jwtManager)
 	optionalAuthMiddleware := middleware.OptionalAuthMiddleware(jwtManager)
 
-	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler, viewHandler, statisticsHandler, authHandler, categoryHandler, tagHandler, viewUsecase, authMiddleware, optionalAuthMiddleware)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler, viewHandler, statisticsHandler, authHandler, categoryHandler, tagHandler, viewUsecase, authMiddleware, optionalAuthMiddleware, cfg)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {

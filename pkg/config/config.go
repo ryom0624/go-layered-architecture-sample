@@ -13,6 +13,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Auth     AuthConfig
+	CORS     CORSConfig
 }
 
 type ServerConfig struct {
@@ -32,6 +33,13 @@ type AuthConfig struct {
 	JWTSecret            string
 	AccessTokenDuration  time.Duration
 	RefreshTokenDuration time.Duration
+}
+
+type CORSConfig struct {
+	AllowedOrigins   string
+	AllowedMethods   string
+	AllowedHeaders   string
+	AllowCredentials bool
 }
 
 func LoadConfig() (*Config, error) {
@@ -56,6 +64,12 @@ func LoadConfig() (*Config, error) {
 			AccessTokenDuration:  time.Duration(getEnvInt("ACCESS_TOKEN_DURATION_MINUTES", constants.DefaultAccessTokenDurationMinutes)) * time.Minute,
 			RefreshTokenDuration: time.Duration(getEnvInt("REFRESH_TOKEN_DURATION_DAYS", constants.DefaultRefreshTokenDurationDays)) * constants.HoursPerDay * time.Hour,
 		},
+		CORS: CORSConfig{
+			AllowedOrigins:   getEnv("CORS_ALLOWED_ORIGINS", constants.DefaultCORSAllowedOrigins),
+			AllowedMethods:   getEnv("CORS_ALLOWED_METHODS", constants.DefaultCORSAllowedMethods),
+			AllowedHeaders:   getEnv("CORS_ALLOWED_HEADERS", constants.DefaultCORSAllowedHeaders),
+			AllowCredentials: getEnvBool("CORS_ALLOW_CREDENTIALS", constants.DefaultCORSAllowCredentials),
+		},
 	}
 
 	return config, nil
@@ -72,6 +86,15 @@ func getEnvInt(key string, defaultValue int) int {
 	if value := os.Getenv(key); value != "" {
 		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
+		}
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
 		}
 	}
 	return defaultValue
