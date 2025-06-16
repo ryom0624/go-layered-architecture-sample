@@ -36,4 +36,4 @@ coverage.out
 # Claude local settings
 .claude/*.local.json
 
-./main
+main
