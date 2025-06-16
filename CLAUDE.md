@@ -9,6 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 [タスク名]をDevelopment Workflowに従ってください。
 ```
 
+🚨 **重要:** Claude Codeは以下の手順を**必ず**実行する必要があります：
+- **🔍 実装前の詳細計画出力（必須）** - タスク着手前に必ず計画を出力・確認
+- **✅ 全テストの完全成功確認（必須）** - `go test ./...`が100%成功するまで修正継続
+- タスクチケットの作成（`tasks/task[X].md`）
+- フィーチャーブランチの作成
+- ドキュメント更新（README.md, CLAUDE.md, TEST_PLAN.md）
+- コミット作成とdevbランチへのマージ
+
 これにより、Clean Architectureの原則に従った高品質で一貫性のある開発が保証されます。詳細な手順とベストプラクティスについては `DEVELOPMENT_FLOW_GUIDE.md` をご覧ください。
 
 ## Common Commands
@@ -76,9 +84,9 @@ git checkout -b feature/task-name
 
 #### 4. テスト実装
 各レイヤーでテストを実装（カスタムモック使用）
-テストの実行が成功するまでテストコードを修正する
+**🚨 テストの実行が100%成功するまでテストコードを修正続ける（必須）**
 ```bash
-go test ./...  # 全テスト実行
+go test ./...  # 全テスト実行 - 100%成功必須
 ```
 
 #### 5. ドキュメント更新
@@ -88,7 +96,7 @@ go test ./...  # 全テスト実行
 
 #### 6. マージ
 ```bash
-git checkout task-documentation
+git checkout dev
 git merge feature/task-name
 ```
 
