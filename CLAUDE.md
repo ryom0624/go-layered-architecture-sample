@@ -114,10 +114,18 @@ git merge feature/task-name
 - アクセス制御（公開・非公開読書リスト）
 - 複合ユニーク制約で重複防止
 
-#### 📋 Task 7: 閲覧履歴・統計機能（実装予定）
+#### ✅ Task 7: 閲覧履歴・統計機能
 - **View Tracking**: 記事閲覧の自動トラッキング
-- **Reading Analytics**: ユーザー読書分析
+- **Reading Analytics**: ユーザー読書分析  
 - **Platform Statistics**: プラットフォーム統計情報
+
+**実装パターン**:
+- ArticleView エンティティで個別閲覧トラッキング
+- UserReadingHistory エンティティで読書履歴管理
+- ArticleStatistics エンティティで記事統計
+- DailyStatistics エンティティで日次統計
+- ViewTrackingMiddleware で自動閲覧記録
+- 統計情報のリアルタイム集計とキャッシュ
 
 ### 開発ガイドライン
 
@@ -254,6 +262,22 @@ RESTful API with the following endpoints:
 #### Public Reading Lists
 - `GET /api/v1/reading-lists/public` - Get public reading lists
 - `GET /api/v1/users/:id/reading-lists/public` - Get user's public reading lists
+
+#### View Tracking and Reading Progress
+- `PUT /api/v1/progress/users/:user_id/articles/:article_id` - Track reading progress
+- `GET /api/v1/progress/users/:user_id/articles/:article_id` - Get reading progress
+- `GET /api/v1/users/:id/reading-history` - Get user's reading history
+- `GET /api/v1/articles/trending` - Get trending articles
+
+#### Analytics and Statistics
+- `GET /api/v1/analytics/overview` - Get platform overview (admin)
+- `GET /api/v1/analytics/daily` - Get daily statistics
+- `GET /api/v1/analytics/daily/range` - Get daily statistics range
+- `GET /api/v1/analytics/articles` - Get all article statistics
+- `GET /api/v1/analytics/articles/popular` - Get popular articles
+- `GET /api/v1/users/:id/analytics` - Get user analytics
+- `GET /api/v1/articles/:id/statistics` - Get article statistics
+- `POST /api/v1/articles/:id/statistics/recalculate` - Recalculate article statistics
 
 ### Database Seeding Data
 The seed command creates sample data:

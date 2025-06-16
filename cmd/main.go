@@ -30,6 +30,8 @@ func main() {
 	commentRepo := repository.NewCommentRepository(db.DB)
 	favoriteRepo := repository.NewFavoriteRepository(db.DB)
 	readingListRepo := repository.NewReadingListRepository(db.DB)
+	viewRepo := repository.NewViewRepository(db.DB)
+	statisticsRepo := repository.NewStatisticsRepository(db.DB)
 
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
@@ -37,6 +39,8 @@ func main() {
 	searchUsecase := usecase.NewSearchUsecase(articleRepo)
 	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo, articleRepo, userRepo, transactionManager)
 	readingListUsecase := usecase.NewReadingListUsecase(readingListRepo, articleRepo, userRepo)
+	viewUsecase := usecase.NewViewUsecase(viewRepo, articleRepo)
+	statisticsUsecase := usecase.NewStatisticsUsecase(statisticsRepo, viewRepo, userRepo, articleRepo)
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	articleHandler := handler.NewArticleHandler(articleUsecase)
@@ -44,8 +48,10 @@ func main() {
 	searchHandler := handler.NewSearchHandler(searchUsecase)
 	favoriteHandler := handler.NewFavoriteHandler(favoriteUsecase)
 	readingListHandler := handler.NewReadingListHandler(readingListUsecase)
+	viewHandler := handler.NewViewHandler(viewUsecase)
+	statisticsHandler := handler.NewStatisticsHandler(statisticsUsecase)
 
-	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler, viewHandler, statisticsHandler, viewUsecase)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {

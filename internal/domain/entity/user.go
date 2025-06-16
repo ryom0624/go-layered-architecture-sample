@@ -10,6 +10,8 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	// Relations
-	Favorites    []Favorite    `json:"favorites,omitempty" gorm:"foreignKey:UserID"`
-	ReadingLists []ReadingList `json:"reading_lists,omitempty" gorm:"foreignKey:UserID"`
+	Favorites         []Favorite            `json:"favorites,omitempty" gorm:"foreignKey:UserID"`
+	ReadingLists      []ReadingList         `json:"reading_lists,omitempty" gorm:"foreignKey:UserID"`
+	Views             []ArticleView         `json:"views,omitempty" gorm:"foreignKey:UserID"`
+	ReadingHistories  []UserReadingHistory  `json:"reading_histories,omitempty" gorm:"foreignKey:UserID"`
 }

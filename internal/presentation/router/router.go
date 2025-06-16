@@ -2,12 +2,17 @@ package router
 
 import (
 	"layered-architecture-template/internal/presentation/handler"
+	"layered-architecture-template/internal/presentation/middleware"
+	"layered-architecture-template/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, viewUsecase usecase.ViewUsecase) *gin.Engine {
 	r := gin.Default()
+	
+	// Add view tracking middleware
+	r.Use(middleware.ViewTrackingMiddleware(viewUsecase))
 
 	api := r.Group("/api/v1")
 	{
@@ -21,6 +26,10 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			users.GET("/:id/comments", commentHandler.GetUserComments)
 			users.GET("/:id/favorites", favoriteHandler.GetUserFavorites)
 			users.GET("/:id/reading-lists/public", readingListHandler.GetUserReadingLists)
+			
+			// Reading history and analytics routes
+			users.GET("/:id/reading-history", viewHandler.GetUserReadingHistories)
+			users.GET("/:id/analytics", statisticsHandler.GetUserAnalytics)
 		}
 
 		articles := api.Group("/articles")
@@ -30,6 +39,7 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			articles.GET("/published", articleHandler.GetPublishedArticles)
 			articles.GET("/popular", searchHandler.GetPopularArticles)
 			articles.GET("/recent", searchHandler.GetRecentArticles)
+			articles.GET("/trending", viewHandler.GetTrendingArticles)
 			articles.GET("/:id", articleHandler.GetArticle)
 			articles.PUT("/:id", articleHandler.UpdateArticle)
 			articles.DELETE("/:id", articleHandler.DeleteArticle)
@@ -45,6 +55,10 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 			articles.DELETE("/:id/favorite", favoriteHandler.RemoveFavorite)
 			articles.GET("/:id/favorites", favoriteHandler.GetArticleFavorites)
 			articles.GET("/:id/favorite-status", favoriteHandler.CheckFavoriteStatus)
+			
+			// Statistics routes for articles
+			articles.GET("/:id/statistics", statisticsHandler.GetArticleStatistics)
+			articles.POST("/:id/statistics/recalculate", statisticsHandler.RecalculateArticleStatistics)
 		}
 
 		comments := api.Group("/comments")
@@ -60,6 +74,23 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 
 		// Search routes
 		api.GET("/search", searchHandler.SearchArticles)
+		
+		// Reading progress routes
+		progress := api.Group("/progress")
+		{
+			progress.PUT("/users/:user_id/articles/:article_id", viewHandler.TrackReadingProgress)
+			progress.GET("/users/:user_id/articles/:article_id", viewHandler.GetReadingHistory)
+		}
+		
+		// Analytics routes
+		analytics := api.Group("/analytics")
+		{
+			analytics.GET("/overview", statisticsHandler.GetPlatformOverview)
+			analytics.GET("/daily", statisticsHandler.GetDailyStatistics)
+			analytics.GET("/daily/range", statisticsHandler.GetDailyStatisticsRange)
+			analytics.GET("/articles", statisticsHandler.GetAllArticleStatistics)
+			analytics.GET("/articles/popular", viewHandler.GetPopularArticles)
+		}
 		
 		// Reading list routes
 		readingLists := api.Group("/reading-lists")

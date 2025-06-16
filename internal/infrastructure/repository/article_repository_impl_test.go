@@ -29,8 +29,8 @@ func TestArticleRepositoryImpl_Create(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)).
-			WithArgs("Test Article", "Test Content", 1, "draft", 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","view_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)).
+			WithArgs("Test Article", "Test Content", 1, "draft", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		mock.ExpectCommit()
 
@@ -53,8 +53,8 @@ func TestArticleRepositoryImpl_Create(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)).
-			WithArgs("Test Article", "Test Content", 1, "draft", 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","view_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)).
+			WithArgs("Test Article", "Test Content", 1, "draft", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnError(sql.ErrConnDone)
 		mock.ExpectRollback()
 
@@ -255,8 +255,8 @@ func TestArticleRepositoryImpl_Update(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"created_at"=$6,"updated_at"=$7 WHERE "id" = $8`)).
-			WithArgs("Updated Title", "Updated Content", 1, "published", 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"view_count"=$6,"created_at"=$7,"updated_at"=$8 WHERE "id" = $9`)).
+			WithArgs("Updated Title", "Updated Content", 1, "published", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -280,8 +280,8 @@ func TestArticleRepositoryImpl_Update(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"created_at"=$6,"updated_at"=$7 WHERE "id" = $8`)).
-			WithArgs("Updated Title", "Updated Content", 1, "published", 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"view_count"=$6,"created_at"=$7,"updated_at"=$8 WHERE "id" = $9`)).
+			WithArgs("Updated Title", "Updated Content", 1, "published", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnError(sql.ErrConnDone)
 		mock.ExpectRollback()
 
@@ -387,8 +387,8 @@ func TestArticleRepositoryImpl_CreateWithTx(t *testing.T) {
 		txDB := db.Begin()
 		txMock := &MockTransactionImpl{db: txDB}
 
-		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)).
-			WithArgs("Test Article", "Test Content", 1, "draft", 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "articles" ("title","content","author_id","status","favorite_count","view_count","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)).
+			WithArgs("Test Article", "Test Content", 1, "draft", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
 		err := repo.CreateWithTx(ctx, txMock, article)
@@ -423,8 +423,8 @@ func TestArticleRepositoryImpl_UpdateWithTx(t *testing.T) {
 		txDB := db.Begin()
 		txMock := &MockTransactionImpl{db: txDB}
 
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"created_at"=$6,"updated_at"=$7 WHERE "id" = $8`)).
-			WithArgs("Updated Title", "Updated Content", 1, "published", 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "articles" SET "title"=$1,"content"=$2,"author_id"=$3,"status"=$4,"favorite_count"=$5,"view_count"=$6,"created_at"=$7,"updated_at"=$8 WHERE "id" = $9`)).
+			WithArgs("Updated Title", "Updated Content", 1, "published", 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := repo.UpdateWithTx(ctx, txMock, article)
