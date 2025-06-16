@@ -47,13 +47,14 @@ func TestUserRepositoryImpl_Create(t *testing.T) {
 
 	t.Run("successful user creation", func(t *testing.T) {
 		user := &entity.User{
-			Name:  "John Doe",
-			Email: "john@example.com",
+			Name:     "John Doe",
+			Email:    "john@example.com",
+			Password: "hashedpassword",
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "users" ("name","email","created_at","updated_at") VALUES ($1,$2,$3,$4) RETURNING "id"`)).
-			WithArgs("John Doe", "john@example.com", sqlmock.AnyArg(), sqlmock.AnyArg()).
+		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "users" ("name","email","password","created_at","updated_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`)).
+			WithArgs("John Doe", "john@example.com", "hashedpassword", sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		mock.ExpectCommit()
 
@@ -69,13 +70,14 @@ func TestUserRepositoryImpl_Create(t *testing.T) {
 
 	t.Run("database error during creation", func(t *testing.T) {
 		user := &entity.User{
-			Name:  "Jane Doe",
-			Email: "jane@example.com",
+			Name:     "Jane Doe",
+			Email:    "jane@example.com",
+			Password: "hashedpassword",
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "users" ("name","email","created_at","updated_at") VALUES ($1,$2,$3,$4) RETURNING "id"`)).
-			WithArgs("Jane Doe", "jane@example.com", sqlmock.AnyArg(), sqlmock.AnyArg()).
+		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "users" ("name","email","password","created_at","updated_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`)).
+			WithArgs("Jane Doe", "jane@example.com", "hashedpassword", sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnError(sql.ErrConnDone)
 		mock.ExpectRollback()
 
@@ -275,14 +277,15 @@ func TestUserRepositoryImpl_Update(t *testing.T) {
 
 	t.Run("successful user update", func(t *testing.T) {
 		user := &entity.User{
-			ID:    1,
-			Name:  "Updated Name",
-			Email: "updated@example.com",
+			ID:       1,
+			Name:     "Updated Name",
+			Email:    "updated@example.com",
+			Password: "newhashedpassword",
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"created_at"=$3,"updated_at"=$4 WHERE "id" = $5`)).
-			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"password"=$3,"created_at"=$4,"updated_at"=$5 WHERE "id" = $6`)).
+			WithArgs("Updated Name", "updated@example.com", "newhashedpassword", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -298,14 +301,15 @@ func TestUserRepositoryImpl_Update(t *testing.T) {
 
 	t.Run("database error during update", func(t *testing.T) {
 		user := &entity.User{
-			ID:    1,
-			Name:  "Updated Name",
-			Email: "updated@example.com",
+			ID:       1,
+			Name:     "Updated Name",
+			Email:    "updated@example.com",
+			Password: "newhashedpassword",
 		}
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"created_at"=$3,"updated_at"=$4 WHERE "id" = $5`)).
-			WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"password"=$3,"created_at"=$4,"updated_at"=$5 WHERE "id" = $6`)).
+			WithArgs("Updated Name", "updated@example.com", "newhashedpassword", sqlmock.AnyArg(), sqlmock.AnyArg(), 1).
 			WillReturnError(sql.ErrConnDone)
 		mock.ExpectRollback()
 

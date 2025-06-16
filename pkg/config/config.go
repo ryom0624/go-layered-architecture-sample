@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -10,6 +11,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Auth     AuthConfig
 }
 
 type ServerConfig struct {
@@ -23,6 +25,12 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
+}
+
+type AuthConfig struct {
+	JWTSecret            string
+	AccessTokenDuration  time.Duration
+	RefreshTokenDuration time.Duration
 }
 
 func LoadConfig() (*Config, error) {
@@ -41,6 +49,11 @@ func LoadConfig() (*Config, error) {
 			User:     getEnv("DB_USER", "user"),
 			Password: getEnv("DB_PASSWORD", "password"),
 			Name:     getEnv("DB_NAME", "database"),
+		},
+		Auth: AuthConfig{
+			JWTSecret:            getEnv("JWT_SECRET", "your-secret-key"),
+			AccessTokenDuration:  time.Duration(getEnvInt("ACCESS_TOKEN_DURATION_MINUTES", 15)) * time.Minute,
+			RefreshTokenDuration: time.Duration(getEnvInt("REFRESH_TOKEN_DURATION_DAYS", 7)) * 24 * time.Hour,
 		},
 	}
 

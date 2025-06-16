@@ -2,7 +2,7 @@
 
 ## 概要
 Clean Architecture パターンに基づくGoアプリケーションの包括的なテスト戦略とその実装状況。
-ユーザー管理機能、記事投稿機能、コメントシステム（すべてトランザクション対応）の完全なテストスイートを提供。
+ユーザー管理機能、記事投稿機能、コメントシステム、検索・フィルタリング機能、お気に入り・ブックマーク機能、閲覧履歴・統計機能、認証システム（すべてトランザクション対応）の完全なテストスイートを提供。
 
 ## 実装済みテスト
 
@@ -367,9 +367,87 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 **モック実装**: `MockSearchUsecase` - カスタム実装
 **テストルーター**: Gin テストモードでのHTTPテスト
 
+## 認証システムテスト
+
+### ✅ ユースケース層テスト - Auth
+**ファイル**: `internal/usecase/auth_usecase_test.go`
+
+**テスト対象**: 認証ビジネスロジック層の検証（JWT・パスワードハッシュ・トークン管理）
+- `TestAuthUsecase_Register`
+  - 正常なユーザー登録（パスワードハッシュ化・JWT発行）
+  - 重複メールでの登録エラー
+  - 無効な名前バリデーション
+  - 無効なパスワードバリデーション（8文字未満）
+- `TestAuthUsecase_Login`
+  - 正常なログイン（パスワード検証・JWT発行）
+  - 存在しないメールでのログインエラー
+  - 無効なパスワードでのログインエラー
+  - 空のメールでのバリデーションエラー
+- `TestAuthUsecase_RefreshToken`
+  - 正常なアクセストークン更新
+  - 無効なリフレッシュトークンでのエラー
+  - 期限切れリフレッシュトークンでのエラー
+  - 空のリフレッシュトークンでのエラー
+- `TestAuthUsecase_Logout`
+  - 正常な単一デバイスログアウト（リフレッシュトークン削除）
+  - 存在しないリフレッシュトークンでのエラー
+- `TestAuthUsecase_LogoutAll`
+  - 正常な全デバイスログアウト（ユーザーの全リフレッシュトークン削除）
+  - 存在しないユーザーでのエラー
+
+**モック実装**: `MockAuthRepository` - bcryptパスワードハッシュ化対応
+**セキュリティテスト**: パスワードハッシュ化、JWT検証、トークン期限管理
+
+### ✅ ハンドラー層テスト - Auth
+**ファイル**: `internal/presentation/handler/auth_handler_test.go`
+
+**テスト対象**: 認証HTTP エンドポイントの検証
+- `TestAuthHandler_Register`
+  - 正常なユーザー登録 (201 Created)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 必須フィールド不足 (400 Bad Request)
+  - パスワード長不足 (400 Bad Request)
+- `TestAuthHandler_Login`
+  - 正常なログイン (200 OK)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 無効な認証情報 (401 Unauthorized)
+  - 存在しないユーザー (401 Unauthorized)
+- `TestAuthHandler_RefreshToken`
+  - 正常なトークン更新 (200 OK)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 無効なリフレッシュトークン (401 Unauthorized)
+  - 不足リフレッシュトークン (400 Bad Request)
+- `TestAuthHandler_Logout`
+  - 正常なログアウト (200 OK)
+  - 無効なJSONリクエスト (400 Bad Request)
+  - 無効なリフレッシュトークン (400 Bad Request)
+- `TestAuthHandler_LogoutAll`
+  - 正常な全デバイスログアウト (200 OK、認証必須）
+  - 認証なしアクセス (401 Unauthorized)
+
+**モック実装**: `MockAuthUsecase` - カスタム実装
+**テストルーター**: Gin テストモードでのHTTPテスト、認証ミドルウェア統合
+
+### ✅ 認証ミドルウェアテスト
+**ファイル**: `internal/presentation/middleware/auth_test.go`
+
+**テスト対象**: 認証ミドルウェアの検証
+- `TestAuthMiddleware`
+  - 正常なJWTトークンでのアクセス許可
+  - 無効なJWTトークンでのアクセス拒否 (401 Unauthorized)
+  - 期限切れJWTトークンでのアクセス拒否 (401 Unauthorized)
+  - Authorizationヘッダーなしでのアクセス拒否 (401 Unauthorized)
+  - 無効なAuthorization形式でのアクセス拒否 (401 Unauthorized)
+- `TestOptionalAuthMiddleware`
+  - 正常なJWTトークンでのユーザー情報設定
+  - Authorizationヘッダーなしでもアクセス許可（ユーザー情報なし）
+  - 無効なJWTトークンでもアクセス許可（ユーザー情報なし）
+
+**セキュリティテスト**: JWT検証、トークン期限確認、認証バイパス防止
+
 ## お気に入り・ブックマーク機能テスト
 
-### 🚧 ユースケース層テスト - Favorite（実装予定）
+### ✅ ユースケース層テスト - Favorite
 **ファイル**: `internal/usecase/favorite_usecase_test.go`
 
 **テスト対象**: お気に入りビジネスロジック層の検証（トランザクション対応）
@@ -394,7 +472,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **モック実装**: `MockFavoriteRepository`, `MockArticleRepository`, `MockUserRepository`, `MockTransactionManager`
 
-### 🚧 ユースケース層テスト - ReadingList（実装予定）
+### ✅ ユースケース層テスト - ReadingList
 **ファイル**: `internal/usecase/reading_list_usecase_test.go`
 
 **テスト対象**: 読書リストビジネスロジック層の検証
@@ -422,7 +500,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **モック実装**: `MockReadingListRepository`, `MockArticleRepository`, `MockUserRepository`
 
-### 🚧 ハンドラー層テスト - Favorite（実装予定）
+### ✅ ハンドラー層テスト - Favorite
 **ファイル**: `internal/presentation/handler/favorite_handler_test.go`
 
 **テスト対象**: お気に入りHTTP エンドポイントの検証
@@ -440,7 +518,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **モック実装**: `MockFavoriteUsecase` - カスタム実装
 
-### 🚧 ハンドラー層テスト - ReadingList（実装予定）
+### ✅ ハンドラー層テスト - ReadingList
 **ファイル**: `internal/presentation/handler/reading_list_handler_test.go`
 
 **テスト対象**: 読書リストHTTP エンドポイントの検証
@@ -455,7 +533,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **モック実装**: `MockReadingListUsecase` - カスタム実装
 
-### 🚧 リポジトリ層テスト - Favorite（実装予定）
+### ✅ リポジトリ層テスト - Favorite
 **ファイル**: `internal/infrastructure/repository/favorite_repository_impl_test.go`
 
 **テスト対象**: お気に入りデータベース操作層の検証
@@ -471,7 +549,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 **使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM
 
-### 🚧 リポジトリ層テスト - ReadingList（実装予定）
+### ✅ リポジトリ層テスト - ReadingList
 **ファイル**: `internal/infrastructure/repository/reading_list_repository_impl_test.go`
 
 **テスト対象**: 読書リストデータベース操作層の検証
@@ -486,6 +564,97 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
   - カスケード削除の検証（リスト削除時のアイテム削除）
 
 **使用技術**: `github.com/DATA-DOG/go-sqlmock`, GORM
+
+## 閲覧履歴・統計機能テスト
+
+### ✅ ユースケース層テスト - View
+**ファイル**: `internal/usecase/view_usecase_test.go`
+
+**テスト対象**: 閲覧履歴・統計ビジネスロジック層の検証
+- `TestViewUsecase_TrackReadingProgress`
+  - 正常な読書進捗記録
+  - 重複進捗の更新処理
+  - 存在しないユーザー・記事での処理
+- `TestViewUsecase_GetReadingHistory`
+  - ユーザーの読書履歴取得
+  - 存在しないユーザーでのエラー
+- `TestViewUsecase_GetUserReadingHistories`
+  - ユーザーの全読書履歴取得
+  - ページネーション対応
+- `TestViewUsecase_GetTrendingArticles`
+  - トレンド記事取得（閲覧数ベース）
+  - 期間指定フィルタリング
+- `TestViewUsecase_GetPopularArticles`
+  - 人気記事取得（統計データベース）
+  - 制限数の適用
+
+**モック実装**: `MockViewRepository`, `MockArticleRepository`
+
+### ✅ ユースケース層テスト - Statistics
+**ファイル**: `internal/usecase/statistics_usecase_test.go`
+
+**テスト対象**: 統計ビジネスロジック層の検証
+- `TestStatisticsUsecase_GetArticleStatistics`
+  - 記事統計取得
+  - 統計データなし時の自動再計算
+  - 存在しない記事でのエラー
+  - 未公開記事での処理
+- `TestStatisticsUsecase_GetDailyStatisticsRange`
+  - 日次統計範囲取得
+  - 無効な日付範囲でのエラー
+  - 日付範囲制限の検証
+- `TestStatisticsUsecase_GetPlatformOverview`
+  - プラットフォーム全体統計取得
+  - 管理者権限確認
+- `TestStatisticsUsecase_GetUserAnalytics`
+  - ユーザー分析データ取得
+  - 存在しないユーザーでのエラー
+- `TestStatisticsUsecase_RecalculateArticleStatistics`
+  - 記事統計の再計算
+  - リアルタイム統計更新
+
+**モック実装**: `MockStatisticsRepository`, `MockViewRepository`, `MockUserRepository`, `MockArticleRepository`
+
+### ✅ ハンドラー層テスト - View
+**ファイル**: `internal/presentation/handler/view_handler_test.go`
+
+**テスト対象**: 閲覧履歴HTTP エンドポイントの検証
+- `TestViewHandler_TrackReadingProgress`
+  - 正常な読書進捗記録 (200 OK)
+  - 無効なパラメータ (400 Bad Request)
+- `TestViewHandler_GetReadingHistory`
+  - 読書履歴取得 (200 OK)
+  - 存在しないユーザー (404 Not Found)
+- `TestViewHandler_GetUserReadingHistories`
+  - ユーザー読書履歴一覧取得 (200 OK)
+- `TestViewHandler_GetTrendingArticles`
+  - トレンド記事取得 (200 OK)
+- `TestViewHandler_GetPopularArticles`
+  - 人気記事取得 (200 OK)
+
+**モック実装**: `MockViewUsecase` - カスタム実装
+
+### ✅ ハンドラー層テスト - Statistics
+**ファイル**: `internal/presentation/handler/statistics_handler_test.go`
+
+**テスト対象**: 統計HTTP エンドポイントの検証
+- `TestStatisticsHandler_GetArticleStatistics`
+  - 記事統計取得 (200 OK)
+  - 存在しない記事 (404 Not Found)
+- `TestStatisticsHandler_GetDailyStatistics`
+  - 日次統計取得 (200 OK)
+- `TestStatisticsHandler_GetDailyStatisticsRange`
+  - 日次統計範囲取得 (200 OK)
+  - 無効な日付範囲 (400 Bad Request)
+- `TestStatisticsHandler_GetPlatformOverview`
+  - プラットフォーム統計取得 (200 OK)
+  - 管理者権限確認
+- `TestStatisticsHandler_GetUserAnalytics`
+  - ユーザー分析取得 (200 OK)
+- `TestStatisticsHandler_RecalculateArticleStatistics`
+  - 統計再計算 (200 OK)
+
+**モック実装**: `MockStatisticsUsecase` - カスタム実装
 
 ## 共通機能テスト
 
@@ -509,6 +678,23 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
   - ゼロ値の整数環境変数の取得
   - 負の整数環境変数の取得
 
+### ✅ JWTユーティリティテスト
+**ファイル**: `pkg/jwt/jwt_test.go`
+
+**テスト対象**: JWT処理の検証
+- `TestJWTManager_GenerateToken`
+  - 正常なJWTトークン生成
+  - ユーザー情報のクレーム設定
+  - トークン期限設定
+- `TestJWTManager_VerifyToken`
+  - 正常なJWTトークン検証
+  - 無効なトークンでのエラー
+  - 期限切れトークンでのエラー
+  - 改ざんされたトークンでのエラー
+- `TestGenerateRefreshToken`
+  - リフレッシュトークン生成
+  - ランダム性の確認
+
 ## トランザクション機能テスト
 
 ### ✅ 実装済みトランザクションテスト
@@ -524,7 +710,7 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 
 ## テスト統計
 
-### 実装済みテストファイル数: 12ファイル
+### 実装済みテストファイル数: 20ファイル
 #### ユーザー機能: 3ファイル
 - UseCase テスト
 - Handler テスト  
@@ -544,25 +730,33 @@ Clean Architecture パターンに基づくGoアプリケーションの包括�
 - UseCase テスト（検索・ページネーション・バリデーション含む）
 - Handler テスト（HTTP エンドポイント検証）
 
-#### 共通機能: 1ファイル
-- Config テスト
-
-### 実装予定テストファイル数: 6ファイル
-#### お気に入り機能: 3ファイル
+#### お気に入り・ブックマーク機能: 3ファイル
 - UseCase テスト（トランザクション対応・カウント機能含む）
 - Handler テスト（認証・権限確認含む）
 - Repository テスト（複合ユニーク制約含む）
 
-#### 読書リスト機能: 3ファイル
-- UseCase テスト（権限管理・プライバシー設定含む）
-- Handler テスト（アクセス制御含む）
-- Repository テスト（カスケード削除含む）
+#### 閲覧履歴・統計機能: 4ファイル
+- View UseCase テスト（読書進捗・履歴管理含む）
+- Statistics UseCase テスト（統計計算・分析含む）
+- View Handler テスト（HTTP エンドポイント検証）
+- Statistics Handler テスト（統計API検証）
 
-### テストケース総数: 約150+テストケース
+#### 認証システム: 3ファイル
+- UseCase テスト（JWT・パスワードハッシュ・トークン管理含む）
+- Handler テスト（認証エンドポイント・セキュリティ検証）
+- Middleware テスト（認証制御・権限確認）
+
+#### 共通機能: 2ファイル
+- Config テスト
+- JWT ユーティリティテスト
+
+### テストケース総数: 約250+テストケース
 - 正常系テスト
 - 異常系テスト
 - バリデーションテスト
 - トランザクションテスト
+- セキュリティテスト（認証・認可）
+- 統計・分析テスト
 
 ## 未実装テスト（将来拡張）
 
@@ -634,16 +828,36 @@ go test ./internal/presentation/handler -v
 10. `internal/usecase/search_usecase_test.go` - 検索ビジネスロジックテスト（検索・ページネーション・バリデーション含む）
 11. `internal/presentation/handler/search_handler_test.go` - 検索HTTPハンドラーテスト
 
+### お気に入り・ブックマーク機能テスト
+12. `internal/usecase/favorite_usecase_test.go` - お気に入りビジネスロジックテスト（トランザクション対応・カウント機能含む）
+13. `internal/usecase/reading_list_usecase_test.go` - 読書リストビジネスロジックテスト（権限管理・プライバシー設定含む）
+14. `internal/presentation/handler/favorite_handler_test.go` - お気に入りHTTPハンドラーテスト（認証・権限確認含む）
+15. `internal/presentation/handler/reading_list_handler_test.go` - 読書リストHTTPハンドラーテスト（アクセス制御含む）
+16. `internal/infrastructure/repository/favorite_repository_impl_test.go` - お気に入りリポジトリテスト（複合ユニーク制約含む）
+17. `internal/infrastructure/repository/reading_list_repository_impl_test.go` - 読書リストリポジトリテスト（カスケード削除含む）
+
+### 閲覧履歴・統計機能テスト
+18. `internal/usecase/view_usecase_test.go` - 閲覧履歴ビジネスロジックテスト（読書進捗・履歴管理含む）
+19. `internal/usecase/statistics_usecase_test.go` - 統計ビジネスロジックテスト（統計計算・分析含む）
+20. `internal/presentation/handler/view_handler_test.go` - 閲覧履歴HTTPハンドラーテスト
+21. `internal/presentation/handler/statistics_handler_test.go` - 統計HTTPハンドラーテスト
+
+### 認証システムテスト
+22. `internal/usecase/auth_usecase_test.go` - 認証ビジネスロジックテスト（JWT・パスワードハッシュ・トークン管理含む）
+23. `internal/presentation/handler/auth_handler_test.go` - 認証HTTPハンドラーテスト（セキュリティ検証含む）
+24. `internal/presentation/middleware/auth_test.go` - 認証ミドルウェアテスト（認証制御・権限確認）
+
 ### 共通機能テスト
-12. `pkg/config/config_test.go` - 設定管理テスト
+25. `pkg/config/config_test.go` - 設定管理テスト
+26. `pkg/jwt/jwt_test.go` - JWTユーティリティテスト
 
 ## 今後の拡張予定
 
 1. **統合テスト** - レイヤー間の連携テスト
 2. **E2Eテスト** - アプリケーション全体のテスト
-3. **パフォーマンステスト** - 負荷テスト
-4. **セキュリティテスト** - 脆弱性テスト
-5. **認証・認可機能テスト** - JWT認証等のセキュリティテスト
+3. **パフォーマンステスト** - 負荷テスト、大量データ処理テスト
+4. **セキュリティテスト** - 認証バイパス、権限昇格、SQLインジェクション等の脆弱性テスト
+5. **認証リポジトリテスト** - 認証データベース操作の単体テスト
 
 ## 注意事項
 
@@ -651,3 +865,6 @@ go test ./internal/presentation/handler -v
 - モックによる完全な依存関係の分離を実現
 - 実際のHTTPリクエスト/レスポンスを検証
 - Clean Architecture の各層の責務を適切に分離してテスト
+- JWT認証・パスワードハッシュ化等のセキュリティ機能を包括的に検証
+- 統計・分析機能の計算ロジックを詳細にテスト
+- トランザクション処理の整合性を全機能で検証

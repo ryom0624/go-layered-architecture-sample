@@ -136,6 +136,19 @@ git merge feature/task-name
 - ViewTrackingMiddleware で自動閲覧記録
 - 統計情報のリアルタイム集計とキャッシュ
 
+#### ✅ Task 8: 認証システム
+- **JWT Authentication**: アクセストークンによる認証
+- **User Registration/Login**: 安全なユーザー登録・ログイン
+- **Token Management**: リフレッシュトークンによる自動更新
+- **Multi-device Support**: デバイス別ログアウト機能
+
+**実装パターン**:
+- RefreshToken エンティティでトークン管理
+- bcrypt による安全なパスワードハッシュ化
+- JWT によるステートレス認証
+- AuthMiddleware による認証制御
+- オプション認証ミドルウェアによる柔軟な認証
+
 ### 開発ガイドライン
 
 #### コーディング規約
@@ -175,6 +188,10 @@ This is a Clean Architecture implementation with strict dependency rules:
 - Environment variables loaded via `pkg/config/config.go`
 - Database connection supports both PostgreSQL and MySQL via `DB_DRIVER` env var
 - Auto-migration handled by GORM in `internal/infrastructure/database/connection.go`
+- Authentication configuration:
+  - `JWT_SECRET` - Secret key for JWT token signing
+  - `ACCESS_TOKEN_DURATION_MINUTES` - Access token expiry (default: 15 minutes)
+  - `REFRESH_TOKEN_DURATION_DAYS` - Refresh token expiry (default: 7 days)
 
 ### Adding New Features
 When adding new entities, follow this sequence:
@@ -203,6 +220,13 @@ The codebase includes comprehensive tests for all layers:
 
 ### API Endpoints
 RESTful API with the following endpoints:
+
+#### Authentication
+- `POST /api/v1/auth/register` - User registration (requires name, email, password)
+- `POST /api/v1/auth/login` - User login (requires email, password)
+- `POST /api/v1/auth/refresh` - Refresh access token (requires refresh_token)
+- `POST /api/v1/auth/logout` - Logout from single device (requires refresh_token)
+- `POST /api/v1/auth/logout-all` - Logout from all devices (requires authentication)
 
 #### User Management
 - `POST /api/v1/users` - Create user (requires name, email)

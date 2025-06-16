@@ -83,6 +83,21 @@ Clean Architecture（クリーンアーキテクチャ）に基づいたGo言語
 - 公開・非公開読書リスト設定
 - お気に入り数の自動カウント・トランザクション対応
 
+### ✅ 閲覧履歴・統計機能
+- 記事閲覧の自動トラッキング
+- ユーザー読書履歴管理
+- プラットフォーム統計情報（日次統計・記事統計）
+- 人気記事・トレンド記事分析
+- リアルタイム統計集計
+
+### ✅ 認証システム
+- JWT（JSON Web Token）による認証
+- ユーザー登録・ログイン機能
+- リフレッシュトークンによる自動更新
+- マルチデバイス対応（デバイス別ログアウト）
+- 安全なパスワードハッシュ化（bcrypt）
+- 認証ミドルウェアによるアクセス制御
+
 ### ✅ トランザクション機能
 - 複数テーブル操作の整合性保証
 - エラー時の自動ロールバック
@@ -121,6 +136,16 @@ docker compose up
 ```
 
 ## API エンドポイント
+
+### 認証システム
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | ユーザー登録 |
+| POST | `/api/v1/auth/login` | ログイン |
+| POST | `/api/v1/auth/refresh` | アクセストークン更新 |
+| POST | `/api/v1/auth/logout` | 単一デバイスログアウト |
+| POST | `/api/v1/auth/logout-all` | 全デバイスログアウト（認証必須） |
 
 ### ユーザー管理
 
@@ -195,6 +220,46 @@ docker compose up
 | GET | `/api/v1/users/:id/reading-lists/public` | ユーザーの公開読書リスト取得 |
 
 ### リクエスト例
+
+#### ユーザー登録（認証）
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe", "email": "john@example.com", "password": "securepassword123"}'
+```
+
+#### ログイン
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "john@example.com", "password": "securepassword123"}'
+```
+
+#### アクセストークン更新
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "your_refresh_token_here"}'
+```
+
+#### ログアウト
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "your_refresh_token_here"}'
+```
+
+#### 全デバイスログアウト
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/logout-all \
+  -H "Authorization: Bearer your_access_token_here"
+```
+
+#### 認証が必要なエンドポイントへのアクセス
+```bash
+curl -H "Authorization: Bearer your_access_token_here" \
+  http://localhost:8080/api/v1/protected-endpoint
+```
 
 #### ユーザー作成
 ```bash
@@ -326,12 +391,16 @@ curl http://localhost:8080/api/v1/reading-lists/public
 | DB_USER | データベースユーザー | user |
 | DB_PASSWORD | データベースパスワード | password |
 | DB_NAME | データベース名 | database |
+| JWT_SECRET | JWT署名用秘密鍵 | your-secret-key |
+| ACCESS_TOKEN_DURATION_MINUTES | アクセストークン有効期限（分） | 15 |
+| REFRESH_TOKEN_DURATION_DAYS | リフレッシュトークン有効期限（日） | 7 |
 
 ## 使用技術
 
 - **Web Framework**: Gin
 - **ORM**: GORM
 - **Database**: PostgreSQL, MySQL対応
+- **Authentication**: JWT (golang-jwt/jwt), bcrypt
 - **Configuration**: godotenv
 - **Containerization**: Docker
 - **Testing**: 標準testingパッケージ, go-sqlmock, httptest
@@ -403,8 +472,14 @@ docker compose exec app go test ./... -v
 - `internal/usecase/search_usecase_test.go` - 検索ビジネスロジックテスト（検索・ページネーション・バリデーション含む）
 - `internal/presentation/handler/search_handler_test.go` - 検索HTTPハンドラーテスト
 
+#### 認証システム
+- `internal/usecase/auth_usecase_test.go` - 認証ビジネスロジックテスト（JWT・パスワードハッシュ・トークン管理含む）
+- `internal/presentation/handler/auth_handler_test.go` - 認証HTTPハンドラーテスト
+- `internal/infrastructure/repository/auth_repository_impl_test.go` - 認証リポジトリテスト
+
 #### 共通機能
 - `pkg/config/config_test.go` - 設定管理テスト
+- `pkg/jwt/jwt_test.go` - JWTユーティリティテスト
 
 詳細なテスト計画については `TEST_PLAN.md` を参照してください。
 

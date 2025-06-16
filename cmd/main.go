@@ -6,9 +6,11 @@ import (
 	"layered-architecture-template/internal/infrastructure/database"
 	"layered-architecture-template/internal/infrastructure/repository"
 	"layered-architecture-template/internal/presentation/handler"
+	"layered-architecture-template/internal/presentation/middleware"
 	"layered-architecture-template/internal/presentation/router"
 	"layered-architecture-template/internal/usecase"
 	"layered-architecture-template/pkg/config"
+	"layered-architecture-template/pkg/jwt"
 )
 
 func main() {
@@ -32,7 +34,10 @@ func main() {
 	readingListRepo := repository.NewReadingListRepository(db.DB)
 	viewRepo := repository.NewViewRepository(db.DB)
 	statisticsRepo := repository.NewStatisticsRepository(db.DB)
+	authRepo := repository.NewAuthRepository(db.DB)
 
+	jwtManager := jwt.NewJWTManager(cfg.Auth.JWTSecret, cfg.Auth.AccessTokenDuration)
+	
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	articleUsecase := usecase.NewArticleUsecase(articleRepo, userRepo, transactionManager)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, userRepo, articleRepo, transactionManager)
@@ -41,6 +46,7 @@ func main() {
 	readingListUsecase := usecase.NewReadingListUsecase(readingListRepo, articleRepo, userRepo)
 	viewUsecase := usecase.NewViewUsecase(viewRepo, articleRepo)
 	statisticsUsecase := usecase.NewStatisticsUsecase(statisticsRepo, viewRepo, userRepo, articleRepo)
+	authUsecase := usecase.NewAuthUsecase(authRepo, jwtManager, cfg.Auth.RefreshTokenDuration)
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	articleHandler := handler.NewArticleHandler(articleUsecase)
@@ -50,8 +56,12 @@ func main() {
 	readingListHandler := handler.NewReadingListHandler(readingListUsecase)
 	viewHandler := handler.NewViewHandler(viewUsecase)
 	statisticsHandler := handler.NewStatisticsHandler(statisticsUsecase)
+	authHandler := handler.NewAuthHandler(authUsecase)
+	
+	authMiddleware := middleware.AuthMiddleware(jwtManager)
+	optionalAuthMiddleware := middleware.OptionalAuthMiddleware(jwtManager)
 
-	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler, viewHandler, statisticsHandler, viewUsecase)
+	r := router.SetupRouter(userHandler, articleHandler, commentHandler, searchHandler, favoriteHandler, readingListHandler, viewHandler, statisticsHandler, authHandler, viewUsecase, authMiddleware, optionalAuthMiddleware)
 
 	log.Printf("Server starting on port %s", cfg.Server.Port)
 	if err := r.Run(":" + cfg.Server.Port); err != nil {

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, viewUsecase usecase.ViewUsecase) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.ArticleHandler, commentHandler *handler.CommentHandler, searchHandler *handler.SearchHandler, favoriteHandler *handler.FavoriteHandler, readingListHandler *handler.ReadingListHandler, viewHandler *handler.ViewHandler, statisticsHandler *handler.StatisticsHandler, authHandler *handler.AuthHandler, viewUsecase usecase.ViewUsecase, authMiddleware gin.HandlerFunc, optionalAuthMiddleware gin.HandlerFunc) *gin.Engine {
 	r := gin.Default()
 	
 	// Add view tracking middleware
@@ -16,6 +16,15 @@ func SetupRouter(userHandler *handler.UserHandler, articleHandler *handler.Artic
 
 	api := r.Group("/api/v1")
 	{
+		// Authentication routes (no auth required)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.RefreshToken)
+			auth.POST("/logout", authHandler.Logout)
+			auth.POST("/logout-all", authMiddleware, authHandler.LogoutAll)
+		}
 		users := api.Group("/users")
 		{
 			users.POST("", userHandler.CreateUser)
