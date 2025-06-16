@@ -321,12 +321,38 @@ RESTful API with the following endpoints:
 - `POST /api/v1/articles/:id/statistics/recalculate` - Recalculate article statistics
 
 ### Database Seeding Data
-The seed command creates sample data:
-- **10 Users**: John Doe, Jane Smith, Alice Johnson, etc.
-- **15 Articles**: Technical articles on various programming topics
-- **25+ Comments**: Sample comments with hierarchical structure and different statuses
-- **Mixed Status**: Some articles published, some in draft status; comments with pending/approved/rejected status
-- **Relations**: Articles assigned to users, comments linked to articles and users with parent-child relationships
+The seed command creates comprehensive sample data for testing and development:
+
+#### Core Content Data
+- **50 Users**: Diverse tech professionals including developers, researchers, and specialists from various domains and international backgrounds
+- **65+ Articles**: Extensive technical content covering:
+  - AI/ML (TensorFlow, NLP, Computer Vision, MLOps)
+  - Web3/Blockchain (Smart Contracts, DeFi, NFTs, Layer 2)
+  - DevOps/Cloud (Kubernetes, Terraform, CI/CD, Monitoring)
+  - Security (Web App Security, OAuth, Container Security, Zero Trust)
+  - Frontend/Mobile (React, CSS Grid, PWAs, React Native vs Flutter)
+  - Backend/API (GraphQL vs REST, gRPC, Event-driven architecture)
+  - Data Engineering (Airflow, Spark, Data Lakes, Time Series DBs)
+  - Game Development, UX/Design, Quantum Computing, Career topics
+- **300+ Comments**: Rich technical discussions with hierarchical structure (up to 3 levels), various moderation states
+
+#### Advanced Feature Data
+- **Favorites**: User-article favorite relationships with realistic distribution
+- **Reading Lists**: 15+ themed lists (AI/ML Learning Path, DevOps Best Practices, etc.) with 3-10 articles each
+- **View History**: Comprehensive tracking of article views with realistic IP addresses and user agents
+- **Reading Progress**: User reading analytics with completion rates, reading times, and progress tracking
+- **Statistics**: 
+  - Article-level statistics (views, completion rates, reading times)
+  - Daily platform statistics (30 days of historical data)
+  - User analytics and reading patterns
+- **Authentication Tokens**: Active refresh tokens for multi-device testing
+
+#### Data Characteristics
+- **Realistic Distribution**: Content varies by author expertise, publication dates span several months
+- **Mixed Status**: Articles include published/draft states, comments have pending/approved/rejected status
+- **International Scope**: Users from various countries with domain-specific email addresses
+- **Production-Like Scale**: Sufficient data volume for performance and pagination testing
+- **Rich Relationships**: Complex interconnections between users, articles, comments, favorites, and reading lists
 
 ## Constants Management
 

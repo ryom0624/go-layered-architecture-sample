@@ -46,6 +46,48 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 		return err
 	}
 
+	// Seed enhanced comments for better discussions
+	log.Println("Seeding enhanced comments...")
+	if err := SeedEnhancedComments(s.db); err != nil {
+		log.Printf("Failed to seed enhanced comments: %v", err)
+		return err
+	}
+
+	// Seed favorites
+	log.Println("Seeding favorites...")
+	if err := SeedFavorites(s.db); err != nil {
+		log.Printf("Failed to seed favorites: %v", err)
+		return err
+	}
+
+	// Seed reading lists
+	log.Println("Seeding reading lists...")
+	if err := SeedReadingLists(s.db); err != nil {
+		log.Printf("Failed to seed reading lists: %v", err)
+		return err
+	}
+
+	// Seed view history and reading progress
+	log.Println("Seeding view history...")
+	if err := SeedViewHistory(s.db); err != nil {
+		log.Printf("Failed to seed view history: %v", err)
+		return err
+	}
+
+	// Seed statistics
+	log.Println("Seeding statistics...")
+	if err := SeedStatistics(s.db); err != nil {
+		log.Printf("Failed to seed statistics: %v", err)
+		return err
+	}
+
+	// Seed authentication tokens
+	log.Println("Seeding auth tokens...")
+	if err := SeedAuthTokens(s.db); err != nil {
+		log.Printf("Failed to seed auth tokens: %v", err)
+		return err
+	}
+
 	log.Println("Database seeding completed successfully!")
 	return nil
 }
