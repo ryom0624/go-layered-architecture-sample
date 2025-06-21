@@ -6,6 +6,7 @@ import (
 	"layered-architecture-template/internal/domain/entity"
 	"layered-architecture-template/internal/domain/repository"
 	"layered-architecture-template/pkg/jwt"
+	"log"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -62,19 +63,33 @@ func (u *authUsecaseImpl) Register(ctx context.Context, req *entity.RegisterRequ
 		return nil, err
 	}
 
-	refreshTokenStr, err := jwt.GenerateRefreshToken()
-	if err != nil {
-		return nil, err
-	}
+	log.Println("accessToken", accessToken)
 
-	refreshToken := &entity.RefreshToken{
-		UserID:    user.ID,
-		Token:     refreshTokenStr,
-		ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
-	}
+	// Generate refresh token with retry logic
+	var refreshTokenStr string
+	var refreshToken *entity.RefreshToken
+	maxRetries := 3
+	
+	for i := 0; i < maxRetries; i++ {
+		refreshTokenStr, err = jwt.GenerateRefreshToken()
+		if err != nil {
+			return nil, err
+		}
 
-	if err := u.authRepo.StoreRefreshToken(ctx, refreshToken); err != nil {
-		return nil, err
+		refreshToken = &entity.RefreshToken{
+			UserID:    user.ID,
+			Token:     refreshTokenStr,
+			ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
+		}
+
+		if err := u.authRepo.StoreRefreshToken(ctx, refreshToken); err != nil {
+			// If it's a unique constraint violation, retry with a new token
+			if i < maxRetries-1 {
+				continue
+			}
+			return nil, err
+		}
+		break
 	}
 
 	user.Password = ""
@@ -107,19 +122,31 @@ func (u *authUsecaseImpl) Login(ctx context.Context, req *entity.LoginRequest) (
 		return nil, err
 	}
 
-	refreshTokenStr, err := jwt.GenerateRefreshToken()
-	if err != nil {
-		return nil, err
-	}
+	// Generate refresh token with retry logic
+	var refreshTokenStr string
+	var refreshToken *entity.RefreshToken
+	maxRetries := 3
+	
+	for i := 0; i < maxRetries; i++ {
+		refreshTokenStr, err = jwt.GenerateRefreshToken()
+		if err != nil {
+			return nil, err
+		}
 
-	refreshToken := &entity.RefreshToken{
-		UserID:    user.ID,
-		Token:     refreshTokenStr,
-		ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
-	}
+		refreshToken = &entity.RefreshToken{
+			UserID:    user.ID,
+			Token:     refreshTokenStr,
+			ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
+		}
 
-	if err := u.authRepo.StoreRefreshToken(ctx, refreshToken); err != nil {
-		return nil, err
+		if err := u.authRepo.StoreRefreshToken(ctx, refreshToken); err != nil {
+			// If it's a unique constraint violation, retry with a new token
+			if i < maxRetries-1 {
+				continue
+			}
+			return nil, err
+		}
+		break
 	}
 
 	user.Password = ""
@@ -149,23 +176,36 @@ func (u *authUsecaseImpl) RefreshToken(ctx context.Context, refreshToken string)
 		return nil, err
 	}
 
-	newRefreshTokenStr, err := jwt.GenerateRefreshToken()
-	if err != nil {
-		return nil, err
-	}
-
-	newRefreshToken := &entity.RefreshToken{
-		UserID:    storedToken.UserID,
-		Token:     newRefreshTokenStr,
-		ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
-	}
-
-	if err := u.authRepo.StoreRefreshToken(ctx, newRefreshToken); err != nil {
-		return nil, err
-	}
-
+	// Delete old token first to avoid constraint violations
 	if err := u.authRepo.DeleteRefreshToken(ctx, refreshToken); err != nil {
 		return nil, err
+	}
+
+	// Generate new refresh token with retry logic
+	var newRefreshTokenStr string
+	var newRefreshToken *entity.RefreshToken
+	maxRetries := 3
+	
+	for i := 0; i < maxRetries; i++ {
+		newRefreshTokenStr, err = jwt.GenerateRefreshToken()
+		if err != nil {
+			return nil, err
+		}
+
+		newRefreshToken = &entity.RefreshToken{
+			UserID:    storedToken.UserID,
+			Token:     newRefreshTokenStr,
+			ExpiresAt: time.Now().Add(u.refreshTokenExpiry),
+		}
+
+		if err := u.authRepo.StoreRefreshToken(ctx, newRefreshToken); err != nil {
+			// If it's a unique constraint violation, retry with a new token
+			if i < maxRetries-1 {
+				continue
+			}
+			return nil, err
+		}
+		break
 	}
 
 	storedToken.User.Password = ""

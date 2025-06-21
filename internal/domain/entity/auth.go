@@ -25,7 +25,7 @@ type TokenClaims struct {
 }
 
 type RefreshToken struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
+	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	UserID    uint      `json:"user_id" gorm:"not null;index"`
 	Token     string    `json:"token" gorm:"not null;uniqueIndex"`
 	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`

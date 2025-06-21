@@ -23,10 +23,7 @@ func SeedReadingLists(db *gorm.DB) error {
 		return nil
 	}
 
-	readingLists := []entity.ReadingList{}
 	readingListItems := []entity.ReadingListItem{}
-	listID := uint(1)
-	itemID := uint(1)
 
 	listTemplates := []struct {
 		Name        string
@@ -58,7 +55,7 @@ func SeedReadingLists(db *gorm.DB) error {
 			template := listTemplates[(i*4+j)%len(listTemplates)]
 			
 			readingList := entity.ReadingList{
-				ID:          listID,
+				// Remove manual ID assignment - let GORM auto-increment
 				Name:        template.Name,
 				Description: template.Description,
 				UserID:      user.ID,
@@ -66,7 +63,11 @@ func SeedReadingLists(db *gorm.DB) error {
 				CreatedAt:   time.Now().AddDate(0, 0, -rand.Intn(60)),
 				UpdatedAt:   time.Now().AddDate(0, 0, -rand.Intn(30)),
 			}
-			readingLists = append(readingLists, readingList)
+			
+			// Create the reading list first to get the auto-generated ID
+			if err := db.Create(&readingList).Error; err != nil {
+				continue
+			}
 			
 			// Add 3-10 articles to each reading list
 			numArticles := rand.Intn(8) + 3
@@ -96,24 +97,18 @@ func SeedReadingLists(db *gorm.DB) error {
 				notes = noteOptions[rand.Intn(len(noteOptions))]
 
 				item := entity.ReadingListItem{
-					ID:            itemID,
-					ReadingListID: listID,
+					// Remove manual ID assignment - let GORM auto-increment
+					ReadingListID: readingList.ID, // Use the auto-generated ID
 					ArticleID:     articleID,
 					AddedAt:       time.Now().AddDate(0, 0, -rand.Intn(45)),
 					Notes:         notes,
 				}
 				readingListItems = append(readingListItems, item)
-				itemID++
 			}
-			
-			listID++
 		}
 	}
 
-	// Insert reading lists
-	if err := db.Create(&readingLists).Error; err != nil {
-		return err
-	}
+	// Reading lists are already created individually above
 
 	// Insert reading list items
 	batchSize := 100
@@ -148,8 +143,6 @@ func SeedViewHistory(db *gorm.DB) error {
 
 	articleViews := []entity.ArticleView{}
 	readingHistories := []entity.UserReadingHistory{}
-	viewID := uint(1)
-	historyID := uint(1)
 
 	// Generate realistic IP addresses
 	ipAddresses := []string{
@@ -184,7 +177,7 @@ func SeedViewHistory(db *gorm.DB) error {
 			
 			// Create article view
 			view := entity.ArticleView{
-				ID:        viewID,
+				// Remove manual ID assignment - let GORM auto-increment
 				ArticleID: articleID,
 				UserID:    &user.ID,
 				IPAddress: ipAddresses[rand.Intn(len(ipAddresses))],
@@ -199,7 +192,7 @@ func SeedViewHistory(db *gorm.DB) error {
 			isCompleted := progress >= 90.0
 			
 			history := entity.UserReadingHistory{
-				ID:               historyID,
+				// Remove manual ID assignment - let GORM auto-increment
 				UserID:           user.ID,
 				ArticleID:        articleID,
 				ReadingProgress:  progress,
@@ -209,9 +202,6 @@ func SeedViewHistory(db *gorm.DB) error {
 				IsCompleted:      isCompleted,
 			}
 			readingHistories = append(readingHistories, history)
-			
-			viewID++
-			historyID++
 		}
 	}
 
@@ -255,15 +245,13 @@ func SeedStatistics(db *gorm.DB) error {
 
 	articleStats := []entity.ArticleStatistics{}
 	dailyStats := []entity.DailyStatistics{}
-	statsID := uint(1)
-	dailyID := uint(1)
 
 	// Create article statistics
 	for _, article := range articles {
 		views := rand.Intn(10000) + 100
 		
 		stats := entity.ArticleStatistics{
-			ID:               statsID,
+			// Remove manual ID assignment - let GORM auto-increment
 			ArticleID:        article.ID,
 			TotalViews:       views,
 			UniqueViews:      views - rand.Intn(views/3),
@@ -275,7 +263,6 @@ func SeedStatistics(db *gorm.DB) error {
 			LastCalculatedAt: time.Now().AddDate(0, 0, -rand.Intn(7)),
 		}
 		articleStats = append(articleStats, stats)
-		statsID++
 	}
 
 	// Create daily statistics for the last 30 days
@@ -283,7 +270,7 @@ func SeedStatistics(db *gorm.DB) error {
 		date := time.Now().AddDate(0, 0, -i)
 		
 		daily := entity.DailyStatistics{
-			ID:                dailyID,
+			// Remove manual ID assignment - let GORM auto-increment
 			Date:              date,
 			TotalViews:        rand.Intn(50000) + 10000,
 			UniqueUsers:       rand.Intn(5000) + 1000,
@@ -295,7 +282,6 @@ func SeedStatistics(db *gorm.DB) error {
 			PublishedArticles: rand.Intn(len(articles)) + len(articles)/2,
 		}
 		dailyStats = append(dailyStats, daily)
-		dailyID++
 	}
 
 	// Insert statistics
@@ -321,7 +307,6 @@ func SeedAuthTokens(db *gorm.DB) error {
 	}
 
 	tokens := []entity.RefreshToken{}
-	tokenID := uint(1)
 
 	// Create some active refresh tokens
 	for i, user := range users {
@@ -336,14 +321,13 @@ func SeedAuthTokens(db *gorm.DB) error {
 			expiresAt := time.Now().AddDate(0, 0, 7) // 7 days from now
 			
 			token := entity.RefreshToken{
-				ID:        tokenID,
+				// Remove manual ID assignment - let GORM auto-increment
 				UserID:    user.ID,
 				Token:     generateRandomToken(),
 				ExpiresAt: expiresAt,
 				CreatedAt: time.Now().AddDate(0, 0, -rand.Intn(7)),
 			}
 			tokens = append(tokens, token)
-			tokenID++
 		}
 	}
 

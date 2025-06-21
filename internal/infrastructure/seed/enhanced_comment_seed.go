@@ -25,12 +25,7 @@ func SeedEnhancedComments(db *gorm.DB) error {
 		return nil
 	}
 
-	// Get the current max comment ID to avoid conflicts
-	var maxID uint
-	db.Model(&entity.Comment{}).Select("COALESCE(MAX(id), 0)").Scan(&maxID)
-	
 	comments := []entity.Comment{}
-	commentID := maxID + 1
 
 	// Technical discussions and responses
 	techComments := []string{
@@ -115,7 +110,7 @@ func SeedEnhancedComments(db *gorm.DB) error {
 			}
 
 			comment := entity.Comment{
-				ID:        commentID,
+				// Remove manual ID assignment - let GORM auto-increment
 				Content:   techComments[rand.Intn(len(techComments))],
 				AuthorID:  authorID,
 				ArticleID: article.ID,
@@ -123,7 +118,6 @@ func SeedEnhancedComments(db *gorm.DB) error {
 			}
 
 			comments = append(comments, comment)
-			commentID++
 
 			// 30% chance of having a reply to this comment
 			if rand.Float32() < 0.3 && status == "approved" {
@@ -136,7 +130,7 @@ func SeedEnhancedComments(db *gorm.DB) error {
 				}
 
 				reply := entity.Comment{
-					ID:        commentID,
+					// Remove manual ID assignment - let GORM auto-increment
 					Content:   replies[rand.Intn(len(replies))],
 					AuthorID:  replyAuthorID,
 					ArticleID: article.ID,
@@ -145,7 +139,6 @@ func SeedEnhancedComments(db *gorm.DB) error {
 				}
 
 				comments = append(comments, reply)
-				commentID++
 
 				// 15% chance of a second-level reply
 				if rand.Float32() < 0.15 {
@@ -158,7 +151,7 @@ func SeedEnhancedComments(db *gorm.DB) error {
 					}
 
 					secondReply := entity.Comment{
-						ID:        commentID,
+						// Remove manual ID assignment - let GORM auto-increment
 						Content:   replies[rand.Intn(len(replies))],
 						AuthorID:  secondReplyAuthorID,
 						ArticleID: article.ID,
@@ -167,7 +160,6 @@ func SeedEnhancedComments(db *gorm.DB) error {
 					}
 
 					comments = append(comments, secondReply)
-					commentID++
 				}
 			}
 		}
@@ -219,14 +211,13 @@ func SeedEnhancedComments(db *gorm.DB) error {
 
 		for _, commentText := range discussion.Comments {
 			comment := entity.Comment{
-				ID:        commentID,
+				// Remove manual ID assignment - let GORM auto-increment
 				Content:   commentText,
 				AuthorID:  users[rand.Intn(len(users))].ID,
 				ArticleID: targetArticle.ID,
 				Status:    "approved",
 			}
 			comments = append(comments, comment)
-			commentID++
 		}
 	}
 
@@ -273,7 +264,6 @@ func SeedFavorites(db *gorm.DB) error {
 
 	// Create random favorite relationships
 	favorites := []entity.Favorite{}
-	favoriteID := uint(1)
 
 	for _, user := range users {
 		// Each user favorites 3-8 random articles
@@ -292,13 +282,12 @@ func SeedFavorites(db *gorm.DB) error {
 			}
 
 			favorite := entity.Favorite{
-				ID:        favoriteID,
+				// Remove manual ID assignment - let GORM auto-increment
 				UserID:    user.ID,
 				ArticleID: articleID,
 				CreatedAt: time.Now().AddDate(0, 0, -rand.Intn(30)), // Random date within last 30 days
 			}
 			favorites = append(favorites, favorite)
-			favoriteID++
 		}
 	}
 
